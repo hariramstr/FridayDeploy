@@ -28,6 +28,6 @@ public sealed class AboutController(SettingsService settingsService, IConfigurat
             databaseSize,
             setting.RetentionDays,
             "MIT",
-            "https://github.com/fridaydeploy/fridaydeploy"));
+            "https://github.com/hariramstr/FridayDeploy"));
     }
 }
