@@ -6,7 +6,11 @@ namespace FridayDeploy.Web.DTOs;
 public sealed class LogIngestRequest
 {
     public DateTime? TimestampUtc { get; set; }
-    public required string Application { get; set; }
+
+    /// <summary>Required for POST /api/logs (validated manually there). Ignored and overwritten from the
+    /// API key's bound application for POST /api/logs/batch, so it's optional in the JSON for that endpoint.</summary>
+    public string Application { get; set; } = "";
+
     public string? Environment { get; set; }
     public string? Version { get; set; }
     public string? Machine { get; set; }

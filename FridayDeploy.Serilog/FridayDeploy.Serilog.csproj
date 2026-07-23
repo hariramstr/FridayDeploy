@@ -16,7 +16,7 @@
     <PackageTags>serilog;serilog-sink;logging;fridaydeploy</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <RepositoryUrl>https://github.com/fridaydeploy/fridaydeploy</RepositoryUrl>
+    <RepositoryUrl>https://github.com/hariramstr/FridayDeploy</RepositoryUrl>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
   </PropertyGroup>
 

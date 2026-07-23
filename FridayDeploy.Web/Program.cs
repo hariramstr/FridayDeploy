@@ -93,7 +93,12 @@ builder.Services.AddRateLimiter(options =>
 });
 
 var app = builder.Build();
+var pathBase = builder.Configuration["PathBase"];
 
+if (!string.IsNullOrWhiteSpace(pathBase))
+{
+    app.UsePathBase(pathBase);
+}
 await app.InitializeDatabaseAsync();
 
 // Configure the HTTP request pipeline.

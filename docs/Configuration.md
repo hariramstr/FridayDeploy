@@ -47,3 +47,13 @@ See [docker-compose.yml](../docker-compose.yml) for the full set already wired u
 | `SpoolDirectory` | `%TEMP%/fridaydeploy-spool` | Where undelivered batches are persisted and resent from. |
 | `MaxSpoolFiles` | `500` | Oldest spooled batches are dropped past this limit. |
 | `HttpTimeout` | `30s` | Per-attempt HTTP timeout. |
+
+## Troubleshooting: sink gets 403 Forbidden but curl works
+
+If `curl` can POST to `/api/logs` or `/api/logs/batch` successfully but the Serilog sink consistently gets `Forbidden` on every attempt (visible via `Serilog.Debugging.SelfLog.Enable(Console.Error)` — see [FridayDeploy.SampleApp/Program.cs](../FridayDeploy.SampleApp/Program.cs) for an example), the response body logged alongside the status (added specifically for this) will usually reveal the cause. A **bare, unbranded 403 page** (e.g. a generic `nginx` error page, not your app or a custom error document) means something in front of the app is blocking the request before it arrives — not FridayDeploy itself, since the app's own API-key handler only ever returns 401, never 403.
+
+The most common cause on shared-hosting control panels (Webuzo, cPanel, Plesk) is a **bundled WAF/bot-protection add-on (ModSecurity, Imunify360, etc.)** flagging the request. These often fingerprint the TLS handshake and client behavior, not just headers, so a legitimate request from .NET's `HttpClient` can get blocked while an identical-looking `curl` request passes. If you hit this:
+
+1. Check the panel's WAF/security section (e.g. Security → ModSecurity → Audit Log) for the specific rule ID that fired, rather than disabling the WAF entirely for the domain.
+2. Add a scoped exception for the ingestion path (`/api/logs`, `/api/logs/batch`) instead of turning ModSecurity off for the whole domain — disabling it site-wide removes protection for everything else hosted there too.
+3. If you can't find the audit log, temporarily disabling the WAF to confirm it's the cause (as opposed to a routing/proxy config issue) is a reasonable diagnostic step — just re-enable it with a targeted rule exception afterward rather than leaving it off.

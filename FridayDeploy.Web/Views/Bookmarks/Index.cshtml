@@ -24,7 +24,7 @@
             }
             <form asp-action="Delete" method="post"><input type="hidden" name="id" value="@bookmark.Id" /><button type="submit" class="danger" title="Remove bookmark">&times;</button></form>
         </div>
-        <p class="muted">@bookmark.CreatedUtc.ToString("u")</p>
+        <p class="muted">@bookmark.CreatedUtc.ToDisplayString()</p>
         @if (!string.IsNullOrWhiteSpace(bookmark.Note))
         {
             <p>@bookmark.Note</p>

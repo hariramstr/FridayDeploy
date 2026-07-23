@@ -21,10 +21,10 @@
             <span><b>@app.MachineCount</b> machines</span>
         </div>
         <p class="muted">Environment @(app.Environment ?? "unknown")</p>
-        <p class="muted">Last error @(app.LastErrorUtc?.ToString("u") ?? "none")</p>
+        <p class="muted">Last error @(app.LastErrorUtc.ToDisplayString() ?? "none")</p>
         <p class="muted">Average @app.AverageLogsPerHour logs/hour</p>
-        <p class="muted">First seen @(app.FirstSeenUtc?.ToString("u") ?? "unregistered")</p>
-        <p class="muted">Last seen @app.LastSeenUtc.ToString("u")</p>
+        <p class="muted">First seen @(app.FirstSeenUtc.ToDisplayString() ?? "unregistered")</p>
+        <p class="muted">Last seen @app.LastSeenUtc.ToDisplayString()</p>
         <p class="muted">API key @(app.HasActiveApiKey ? "active" : "none")</p>
         <p class="mono">@(app.Machine ?? "unknown-machine")</p>
     </a>

@@ -35,7 +35,7 @@
         <div class="stack-list">
         @foreach (var note in Model.Notes)
         {
-            <div><span>@note.Author · @note.CreatedUtc.ToString("u")</span><p>@note.Body</p></div>
+            <div><span>@note.Author · @note.CreatedUtc.ToDisplayString()</span><p>@note.Body</p></div>
         }
         </div>
     }

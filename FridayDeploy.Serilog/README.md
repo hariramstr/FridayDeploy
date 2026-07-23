@@ -1,6 +1,6 @@
 # FridayDeploy.Serilog
 
-A Serilog sink for [FridayDeploy](https://github.com/fridaydeploy/fridaydeploy) — async, batched, gzip-compressed, retrying HTTP log shipping with local spooling so no logs are lost.
+A Serilog sink for [FridayDeploy](https://github.com/hariramstr/FridayDeploy) — async, batched, gzip-compressed, retrying HTTP log shipping with local spooling so no logs are lost.
 
 ## Usage
 

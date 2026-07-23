@@ -9,7 +9,7 @@
 {
     <a class="application-card" asp-action="Details" asp-route-name="@prop.Name">
         <div class="card-row"><h2>@prop.Name</h2><span class="status level-info">@prop.DistinctValues values</span></div>
-        <div class="mini-grid"><span><b>@prop.UsageCount</b> uses</span><span><b>@prop.DistinctValues</b> distinct</span><span><b>@prop.LatestUsageUtc.ToString("MM-dd")</b> latest</span></div>
+        <div class="mini-grid"><span><b>@prop.UsageCount</b> uses</span><span><b>@prop.DistinctValues</b> distinct</span><span><b>@prop.LatestUsageUtc.ToDisplayString()</b> latest</span></div>
         <p class="muted">Click to inspect distinct values and jump straight into filtered logs.</p>
     </a>
 }

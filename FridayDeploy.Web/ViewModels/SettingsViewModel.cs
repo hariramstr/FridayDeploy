@@ -8,4 +8,5 @@ public sealed record SettingsViewModel(
     string Theme,
     string? BrandingName,
     string AdminUsername,
-    bool Saved);
+    bool Saved,
+    bool Truncated);

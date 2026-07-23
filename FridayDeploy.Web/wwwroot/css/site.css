@@ -112,14 +112,27 @@ a, button, input, select, textarea, summary, .side-nav a, .application-card, .lo
 }
 
 .app-shell { min-height: 100vh; display: flex; }
-.sidebar { width: 260px; background: var(--sidebar); border-right: 1px solid var(--border); padding: 22px; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; }
-.brand { display: flex; align-items: center; gap: 12px; font-weight: 700; margin-bottom: 36px; }
-.brand-mark, .login-logo { display: grid; place-items: center; width: 42px; height: 42px; border: 1px solid var(--purple); color: var(--purple); border-radius: 12px; font-family: "JetBrains Mono", monospace; }
+.sidebar { width: 260px; background: var(--sidebar); border-right: 1px solid var(--border); padding: 22px; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; flex-shrink: 0; transition: width .2s ease, padding .2s ease; }
+.sidebar-header { display: flex; align-items: center; gap: 8px; margin-bottom: 36px; }
+.brand { display: flex; align-items: center; gap: 12px; font-weight: 700; min-width: 0; }
+.brand-name { overflow: hidden; white-space: nowrap; }
+.brand-mark, .login-logo { display: grid; place-items: center; width: 42px; height: 42px; flex-shrink: 0; border: 1px solid var(--purple); color: var(--purple); border-radius: 12px; font-family: "JetBrains Mono", monospace; }
+.sidebar-toggle { margin-left: auto; background: transparent; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); padding: 6px; cursor: pointer; display: grid; place-items: center; flex-shrink: 0; }
+.sidebar-toggle:hover { color: var(--text); background: var(--hover); }
 .side-nav { display: grid; gap: 8px; }
-.side-nav a, .logout-form button { display: flex; align-items: center; gap: 10px; padding: 11px 12px; border-radius: 10px; color: var(--muted); background: transparent; border: 0; width: 100%; }
+.side-nav a, .logout-form button { display: flex; align-items: center; gap: 10px; padding: 11px 12px; border-radius: 10px; color: var(--muted); background: transparent; border: 0; width: 100%; overflow: hidden; }
 .side-nav a:hover, .logout-form button:hover { background: var(--hover); color: var(--text); }
+.side-nav a svg, .logout-form button svg { flex-shrink: 0; }
+.nav-label { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .logout-form { margin-top: auto; }
-.content { flex: 1; padding: 34px; overflow: auto; }
+.content { flex: 1; padding: 34px; overflow: auto; min-width: 0; }
+
+.app-shell.sidebar-collapsed .sidebar { width: 76px; padding: 22px 14px; }
+.app-shell.sidebar-collapsed .sidebar-header { flex-direction: column; gap: 12px; margin-bottom: 24px; }
+.app-shell.sidebar-collapsed .brand-name, .app-shell.sidebar-collapsed .nav-label { display: none; }
+.app-shell.sidebar-collapsed .sidebar-toggle { margin-left: 0; }
+.app-shell.sidebar-collapsed .sidebar-toggle i { transform: rotate(180deg); }
+.app-shell.sidebar-collapsed .side-nav a, .app-shell.sidebar-collapsed .logout-form button { justify-content: center; padding: 12px; }
 .global-search { display: grid; grid-template-columns: 22px 1fr auto auto; align-items: center; gap: 10px; margin-bottom: 24px; background: var(--sidebar); border: 1px solid var(--border); border-radius: 16px; padding: 10px 12px; }
 .global-search input { background: transparent; border: 0; outline: none; color: var(--text); font-family: "JetBrains Mono", monospace; }
 .global-search button { background: var(--card); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; }
@@ -144,16 +157,25 @@ a, button, input, select, textarea, summary, .side-nav a, .application-card, .lo
 .card-row h2 { font-size: 1.25rem; margin: 0 0 18px; }
 .mini-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
 .mini-grid span { background: var(--sidebar); border: 1px solid var(--border); border-radius: 12px; padding: 10px; color: var(--muted); }
-.logs-layout { display: grid; grid-template-columns: 310px 1fr; gap: 18px; align-items: start; }
-.filter-panel { background: var(--sidebar); border: 1px solid var(--border); border-radius: 18px; padding: 16px; position: sticky; top: 24px; min-width: 0; }
-.filter-panel form { display: grid; gap: 10px; min-width: 0; }
-.filter-panel label { color: var(--muted); font-size: .85rem; }
+.filter-panel { min-width: 0; }
+.filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px 16px; align-items: end; min-width: 0; }
+.field { display: grid; gap: 6px; min-width: 0; }
+.field label { color: var(--muted); font-size: .85rem; }
+.field-wide { grid-column: 1 / -1; }
+.row-inline { display: flex; gap: 10px; align-items: center; }
+.row-inline .fd-input { flex: 1; }
+.chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { display: flex; align-items: center; gap: 4px; background: var(--sidebar); border: 1px solid var(--border); border-radius: 999px; padding: 6px 6px 6px 14px; }
+.chip a { color: var(--info); }
+.chip form { display: inline-flex; }
+.chip button { background: transparent; border: 0; color: var(--muted); cursor: pointer; padding: 4px 8px; border-radius: 999px; }
+.chip button:hover { color: var(--error); background: var(--hover); }
 .two-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; min-width: 0; }
 .log-list { display: grid; gap: 10px; }
-.log-card { display: grid; grid-template-columns: 180px 96px 150px 130px 1fr; gap: 12px; align-items: center; padding: 14px 16px; }
+.log-card { display: grid; grid-template-columns: 210px 110px 150px 1fr; gap: 12px; align-items: center; padding: 14px 16px; }
 .log-card.compact { grid-template-columns: 96px 140px 1fr; }
 .log-card-rich { padding: 0; overflow: hidden; }
-.log-card-rich summary { cursor: pointer; display: grid; grid-template-columns: 180px 86px 130px 110px 120px 130px 1fr; gap: 10px; align-items: center; padding: 14px 16px; }
+.log-card-rich summary { cursor: pointer; display: grid; grid-template-columns: 210px 110px 150px 1fr; gap: 10px; align-items: center; padding: 14px 16px; }
 .log-card-rich summary::marker { content: ""; }
 .log-expanded { display: flex; flex-wrap: wrap; gap: 12px; padding: 0 16px 16px; color: var(--muted); }
 .log-expanded a, .panel a { color: var(--info); }
@@ -217,11 +239,16 @@ select.fd-input { appearance: auto; text-overflow: ellipsis; }
 
 @media (max-width: 900px) {
   .app-shell { display: block; }
-  .sidebar { width: 100%; height: auto; position: static; }
-  .metric-grid, .app-grid, .detail-grid, .chart-grid, .logs-layout { grid-template-columns: 1fr; }
+  .sidebar, .app-shell.sidebar-collapsed .sidebar { width: 100%; height: auto; position: static; padding: 22px; }
+  .app-shell.sidebar-collapsed .sidebar-header { flex-direction: row; }
+  .app-shell.sidebar-collapsed .brand-name, .app-shell.sidebar-collapsed .nav-label { display: inline; }
+  .app-shell.sidebar-collapsed .sidebar-toggle { margin-left: auto; }
+  .app-shell.sidebar-collapsed .sidebar-toggle i { transform: none; }
+  .app-shell.sidebar-collapsed .side-nav a, .app-shell.sidebar-collapsed .logout-form button { justify-content: flex-start; padding: 11px 12px; }
+  .metric-grid, .app-grid, .detail-grid, .chart-grid { grid-template-columns: 1fr; }
   .log-card, .log-card-rich summary, .global-search { grid-template-columns: 1fr; }
+  .filter-grid { grid-template-columns: 1fr; }
   .content { padding: 20px; }
-  .filter-panel { position: static; }
 }
 
 @media (max-width: 600px) {

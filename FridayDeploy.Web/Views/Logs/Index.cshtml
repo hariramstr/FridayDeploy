@@ -16,65 +16,109 @@
     </div>
 </header>
 
-<section class="logs-layout" data-live="@(Model.Live ? "true" : "false")" data-poll-interval="@pollMs">
-<aside class="filter-panel">
-    <form asp-action="Index" method="get" id="query-builder">
-        <label for="qbExpression">Generated Expression</label>
-        <input id="qbExpression" class="fd-input mono" name="Query" value="@Model.GeneratedExpression" data-expression />
-        <label for="qbApplication">Application</label><select id="qbApplication" class="fd-input" name="Application" data-qb="Application"><option value="">Any</option>@foreach (var item in Model.Applications) { <option selected="@(item == Model.Application)" value="@item">@item</option> }</select>
-        <label for="qbLevel">Level</label><select id="qbLevel" class="fd-input" name="Level" data-qb="Level"><option value="">Any</option>@foreach (var item in Model.Levels) { <option value="@item">@item</option> }</select>
-        <label for="qbEnvironment">Environment</label><select id="qbEnvironment" class="fd-input" name="Environment" data-qb="Environment"><option value="">Any</option>@foreach (var item in Model.Environments) { <option value="@item">@item</option> }</select>
-        <label for="qbMachine">Machine</label><select id="qbMachine" class="fd-input" name="Machine" data-qb="Machine"><option value="">Any</option>@foreach (var item in Model.Machines) { <option value="@item">@item</option> }</select>
-        <label for="qbCorrelationId">CorrelationId</label><input id="qbCorrelationId" class="fd-input" name="CorrelationId" data-qb="CorrelationId" />
-        <label for="qbRequestId">RequestId</label><input id="qbRequestId" class="fd-input" name="RequestId" data-qb="RequestId" />
-        <label for="qbContainsText">Contains Text</label><input id="qbContainsText" class="fd-input" name="ContainsText" data-qb-contains="Message" />
-        <label for="qbSource">Source</label><input id="qbSource" class="fd-input" name="Source" />
-        <label id="qbDurationLabel">Duration</label><div class="two-cols" role="group" aria-labelledby="qbDurationLabel"><input class="fd-input" name="MinDuration" placeholder="min" aria-label="Minimum duration" /><input class="fd-input" name="MaxDuration" placeholder="max" aria-label="Maximum duration" /></div>
-        <label for="qbPropertyName">Property</label><select id="qbPropertyName" class="fd-input" name="PropertyName" data-property-name><option value="">Choose</option>@foreach (var item in Model.PropertyNames) { <option value="@item">@item</option> }</select>
-        <label for="qbPropertyValue">Property Value</label><input id="qbPropertyValue" class="fd-input" name="PropertyValue" data-property-value />
-        <button class="primary-button" type="submit">Run query</button>
-    </form>
-
-    <form asp-action="SaveSearch" method="post" class="stack">
-        <input type="hidden" name="queryString" value="@currentQueryString" />
-        <label>Save this search</label>
-        <input class="fd-input" name="name" placeholder="e.g. Production Errors" required />
-        <button class="ghost-button" type="submit">Save search</button>
-    </form>
-
-    @if (Model.SavedSearches.Count > 0)
-    {
-        <div class="stack">
-            <label>Saved searches</label>
-            @foreach (var saved in Model.SavedSearches)
-            {
-                <div class="row-actions">
-                    <a class="ghost-button" href="@Url.Action("Index")@saved.QueryString">@saved.Name</a>
-                    <form asp-action="DeleteSavedSearch" method="post"><input type="hidden" name="id" value="@saved.Id" /><button type="submit" class="danger" title="Delete saved search">&times;</button></form>
-                </div>
-            }
+<section class="panel filter-panel">
+    <form asp-action="Index" method="get" id="query-builder" class="filter-grid">
+        <div class="field field-wide">
+            <label for="qbExpression">Generated Expression</label>
+            <input id="qbExpression" class="fd-input mono" name="Query" value="@Model.GeneratedExpression" data-expression />
         </div>
-    }
-</aside>
+        <div class="field">
+            <label for="qbApplication">Application</label>
+            <select id="qbApplication" class="fd-input" name="Application" data-qb="Application"><option value="">Any</option>@foreach (var item in Model.Applications) { <option selected="@(item == Model.Application)" value="@item">@item</option> }</select>
+        </div>
+        <div class="field">
+            <label for="qbLevel">Level</label>
+            <select id="qbLevel" class="fd-input" name="Level" data-qb="Level"><option value="">Any</option>@foreach (var item in Model.Levels) { <option value="@item">@item</option> }</select>
+        </div>
+        <div class="field">
+            <label for="qbEnvironment">Environment</label>
+            <select id="qbEnvironment" class="fd-input" name="Environment" data-qb="Environment"><option value="">Any</option>@foreach (var item in Model.Environments) { <option value="@item">@item</option> }</select>
+        </div>
+        <div class="field">
+            <label for="qbMachine">Machine</label>
+            <select id="qbMachine" class="fd-input" name="Machine" data-qb="Machine"><option value="">Any</option>@foreach (var item in Model.Machines) { <option value="@item">@item</option> }</select>
+        </div>
+        <div class="field">
+            <label for="qbCorrelationId">CorrelationId</label>
+            <input id="qbCorrelationId" class="fd-input" name="CorrelationId" data-qb="CorrelationId" />
+        </div>
+        <div class="field">
+            <label for="qbRequestId">RequestId</label>
+            <input id="qbRequestId" class="fd-input" name="RequestId" data-qb="RequestId" />
+        </div>
+        <div class="field">
+            <label for="qbContainsText">Contains Text</label>
+            <input id="qbContainsText" class="fd-input" name="ContainsText" data-qb-contains="Message" />
+        </div>
+        <div class="field">
+            <label for="qbSource">Source</label>
+            <input id="qbSource" class="fd-input" name="Source" />
+        </div>
+        <div class="field">
+            <label id="qbDurationLabel">Duration</label>
+            <div class="two-cols" role="group" aria-labelledby="qbDurationLabel"><input class="fd-input" name="MinDuration" placeholder="min" aria-label="Minimum duration" /><input class="fd-input" name="MaxDuration" placeholder="max" aria-label="Maximum duration" /></div>
+        </div>
+        <div class="field">
+            <label for="qbPropertyName">Property</label>
+            <select id="qbPropertyName" class="fd-input" name="PropertyName" data-property-name><option value="">Choose</option>@foreach (var item in Model.PropertyNames) { <option value="@item">@item</option> }</select>
+        </div>
+        <div class="field">
+            <label for="qbPropertyValue">Property Value</label>
+            <input id="qbPropertyValue" class="fd-input" name="PropertyValue" data-property-value />
+        </div>
+        <div class="field field-action">
+            <button class="primary-button" type="submit">Run query</button>
+        </div>
+    </form>
+</section>
 
-<section class="log-list">
+<section class="panel filter-panel">
+    <div class="filter-grid">
+        <form asp-action="SaveSearch" method="post" class="field field-wide row-inline">
+            <input type="hidden" name="queryString" value="@currentQueryString" />
+            <input class="fd-input" name="name" placeholder="Save current search as&hellip;" required />
+            <button class="ghost-button" type="submit">Save search</button>
+        </form>
+        @if (Model.SavedSearches.Count > 0)
+        {
+            <div class="field field-wide">
+                <label>Saved searches</label>
+                <div class="chip-row">
+                    @foreach (var saved in Model.SavedSearches)
+                    {
+                        <div class="chip">
+                            <a href="@Url.Action("Index")@saved.QueryString">@saved.Name</a>
+                            <form asp-action="DeleteSavedSearch" method="post"><input type="hidden" name="id" value="@saved.Id" /><button type="submit" title="Delete saved search" aria-label="Delete saved search @saved.Name">&times;</button></form>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</section>
+
+<section class="log-list" data-live="@(Model.Live ? "true" : "false")" data-poll-interval="@pollMs">
 @foreach (var log in Model.Logs)
 {
     <details class="log-card-rich">
         <summary>
-        <span class="mono">@log.TimestampUtc.ToString("u")</span>
+        <span class="mono">@log.TimestampUtc.ToDisplayString()</span>
         <span class="level-pill @LogLevelHelper.CssClass(log.Level)">@log.Level</span>
         <strong>@log.Application</strong>
-        <span class="muted">@(log.Environment ?? "env?")</span>
-        <span class="muted">@(log.Machine ?? "machine?")</span>
-        <span class="muted">@(log.Source ?? "no-source")</span>
         <span>@log.Message</span>
         </summary>
-        <div class="log-expanded"><span>Duration @(log.Duration?.ToString() ?? "-") ms</span>@if (!string.IsNullOrWhiteSpace(log.CorrelationId)) { <a asp-controller="Correlation" asp-action="Index" asp-route-id="@log.CorrelationId">Correlation @log.CorrelationId</a> } @if (!string.IsNullOrWhiteSpace(log.RequestId)) { <a asp-controller="Requests" asp-action="Index" asp-route-id="@log.RequestId">Request @log.RequestId</a> } <a asp-action="Details" asp-route-id="@log.Id">Open details</a></div>
+        <div class="log-expanded">
+            <span>Environment @(log.Environment ?? "-")</span>
+            <span>Machine @(log.Machine ?? "-")</span>
+            <span>Source @(log.Source ?? "-")</span>
+            <span>Duration @(log.Duration?.ToString() ?? "-") ms</span>
+            @if (!string.IsNullOrWhiteSpace(log.CorrelationId)) { <a asp-controller="Correlation" asp-action="Index" asp-route-id="@log.CorrelationId">Correlation @log.CorrelationId</a> }
+            @if (!string.IsNullOrWhiteSpace(log.RequestId)) { <a asp-controller="Requests" asp-action="Index" asp-route-id="@log.RequestId">Request @log.RequestId</a> }
+            <a asp-action="Details" asp-route-id="@log.Id">Open details</a>
+        </div>
     </details>
 }
 @if (Model.Logs.Count == 0) { <article class="panel"><p class="muted">No logs today. Production seems calm.</p></article> }
-</section>
 </section>
 
 <nav class="pager">

@@ -6,6 +6,16 @@ if (window.lucide) {
     window.lucide.createIcons({ attrs: { width: 18, height: 18 } });
 }
 
+const sidebarToggle = document.querySelector("[data-sidebar-toggle]");
+if (sidebarToggle) {
+    sidebarToggle.addEventListener("click", () => {
+        const collapsed = document.getElementById("app-shell").classList.toggle("sidebar-collapsed");
+        localStorage.setItem("fd-sidebar-collapsed", String(collapsed));
+        sidebarToggle.setAttribute("aria-label", collapsed ? "Expand sidebar" : "Collapse sidebar");
+        sidebarToggle.setAttribute("title", collapsed ? "Expand sidebar" : "Collapse sidebar");
+    });
+}
+
 document.addEventListener("keydown", event => {
     if (event.ctrlKey && event.key.toLowerCase() === "k") {
         event.preventDefault();

@@ -11,7 +11,7 @@
         <a asp-controller="Logs" asp-action="Index" asp-route-Query="@(Model.Name + "=" + value.Value)">
             <span class="mono">@(value.Value ?? "null")</span>
             <strong>@value.UsageCount</strong>
-            <span class="muted">Latest @value.LatestUsageUtc.ToString("u")</span>
+            <span class="muted">Latest @value.LatestUsageUtc.ToDisplayString()</span>
         </a>
     }
     </div>

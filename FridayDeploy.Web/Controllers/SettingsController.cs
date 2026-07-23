@@ -9,10 +9,10 @@ namespace FridayDeploy.Web.Controllers;
 [Authorize]
 public sealed class SettingsController(SettingsService settingsService, IConfiguration configuration) : Controller
 {
-    public async Task<IActionResult> Index(bool saved = false, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Index(bool saved = false, bool truncated = false, CancellationToken cancellationToken = default)
     {
         var setting = await settingsService.GetAsync(cancellationToken);
-        return View(ToViewModel(setting, saved));
+        return View(ToViewModel(setting, saved, truncated));
     }
 
     [HttpPost]
@@ -32,7 +32,15 @@ public sealed class SettingsController(SettingsService settingsService, IConfigu
         return RedirectToAction(nameof(Index), new { saved = true });
     }
 
-    private SettingsViewModel ToViewModel(AppSetting setting, bool saved) => new(
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> TruncateData(CancellationToken cancellationToken)
+    {
+        await settingsService.TruncateLogDataAsync(cancellationToken);
+        return RedirectToAction(nameof(Index), new { truncated = true });
+    }
+
+    private SettingsViewModel ToViewModel(AppSetting setting, bool saved, bool truncated) => new(
         setting.RetentionDays,
         setting.RefreshIntervalSeconds,
         setting.PollingIntervalSeconds,
@@ -40,5 +48,6 @@ public sealed class SettingsController(SettingsService settingsService, IConfigu
         setting.Theme,
         setting.BrandingName,
         configuration["AdminUser:Username"] ?? "admin",
-        saved);
+        saved,
+        truncated);
 }

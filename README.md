@@ -1,5 +1,9 @@
 # FridayDeploy
 
+[![Build](https://github.com/hariramstr/FridayDeploy/actions/workflows/build.yml/badge.svg)](https://github.com/hariramstr/FridayDeploy/actions/workflows/build.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![.NET 10](https://img.shields.io/badge/.NET-10-512BD4)](https://dotnet.microsoft.com/)
+
 **Because production has a sense of humor.**
 
 FridayDeploy is a lightweight, self-hosted, developer-first structured log server for .NET teams. Point a Serilog sink at it, log in, and watch structured events, correlated requests, and exceptions show up in a fast, keyboard-friendly dashboard — no external infrastructure, no per-seat pricing, SQLite by default.
@@ -22,15 +26,23 @@ FridayDeploy is a lightweight, self-hosted, developer-first structured log serve
 - Full-text and structured search with a small query language (`Level=Error AND District~Salem`), correlation and request timelines, exception explorer, property explorer
 - CSV / JSON / TXT export of any filtered search
 - Saved searches, bookmarks (logs, correlation ids, request ids), and per-log notes
-- Dark / Light / System theme, persisted Settings (retention, refresh interval, polling interval, page size, branding)
+- Dark / Light / System theme, persisted Settings (retention, refresh interval, polling interval, page size, branding), collapsible sidebar
 - Swagger / OpenAPI at `/swagger`
 - Cookie authentication with BCrypt-hashed passwords, first-run admin bootstrap from configuration
-- Configurable nightly retention cleanup
-- Docker and Docker Compose support
+- Configurable nightly retention cleanup, plus a one-click "clear all log data" reset that preserves API keys and settings
+- Rate limiting on login and ingestion endpoints, secure/SameSite cookies, CSRF-protected forms, parameterized EF Core queries throughout — see [docs/Security.md](docs/Security.md)
+- Unit, EF Core/repository, integration, and API/auth test coverage in `FridayDeploy.Tests`, run on every push via GitHub Actions
+- Docker and Docker Compose support, healthcheck included
 
 ## Screenshots
 
-_Dashboard, Applications, and Log Details screenshots go here._
+| Dashboard | Applications |
+|---|---|
+| ![Dashboard](docs/screenshots/dashboard.png) | ![Applications](docs/screenshots/applications.png) |
+
+| Properties | Settings |
+|---|---|
+| ![Properties](docs/screenshots/properties.png) | ![Settings](docs/screenshots/settings.png) |
 
 ## Installation
 
@@ -162,6 +174,8 @@ Log.ForContext("District", "Salem")
 
 Batches are queued asynchronously, compressed, and retried with exponential backoff; if the server is unreachable after all retries, the batch is spooled to disk and resent automatically once it's back — no logs lost. See [FridayDeploy.Serilog/README.md](FridayDeploy.Serilog/README.md).
 
+> **Deploying behind a WAF (Webuzo/cPanel/Plesk)?** If `curl` can reach `/api/logs/batch` fine but the sink consistently gets `Forbidden`, see [docs/Configuration.md](docs/Configuration.md#troubleshooting-sink-gets-403-forbidden-but-curl-works) — it's very likely ModSecurity or a similar bundled WAF flagging the sink's requests, not a FridayDeploy problem.
+
 ## Examples
 
 See [FridayDeploy.SampleApp](FridayDeploy.SampleApp) for a runnable ASP.NET Core app that emits Information/Warning/Error/Fatal logs with correlation ids, structured properties, and a background heartbeat.
@@ -175,7 +189,7 @@ Detailed roadmap: [docs/Roadmap.md](docs/Roadmap.md).
 
 ## Contributing
 
-See [docs/Contributing.md](docs/Contributing.md) and the [issue templates](.github/ISSUE_TEMPLATE).
+See [docs/Contributing.md](docs/Contributing.md) and the [issue templates](.github/ISSUE_TEMPLATE). Every push and pull request runs the full build and `FridayDeploy.Tests` suite via [GitHub Actions](.github/workflows/build.yml); tagged releases (`v*.*.*`) publish the `FridayDeploy.Serilog` NuGet package and a container image automatically ([release.yml](.github/workflows/release.yml)).
 
 ## Security
 
@@ -196,3 +210,7 @@ MIT — see [LICENSE](LICENSE).
 **What happens to logs if FridayDeploy is down?** The sink retries with exponential backoff, then spools failed batches to local disk and resends them automatically once the server is reachable again.
 
 **Is this multi-tenant / does it support multiple users?** Not yet — v1 is single-admin. Multi-user/RBAC is on the [v2 roadmap](docs/Roadmap.md).
+
+**How do I wipe test data without losing my API keys?** Settings → Danger Zone → "Clear all log data". It deletes logs, notes, bookmarks, and saved searches, but keeps API keys, registered applications, and your settings intact — no need to re-issue keys or reconfigure the sink afterward.
+
+**The sink gets `Forbidden` (403) but `curl` works against the same URL — why?** This isn't FridayDeploy itself — its own API-key check only ever returns 401, never 403 — so something in front of the app is blocking the request. On shared-hosting panels (Webuzo, cPanel, Plesk) this is almost always a bundled WAF (ModSecurity, Imunify360, etc.) fingerprinting .NET's `HttpClient` differently from curl/a browser and flagging it. Enable `Serilog.Debugging.SelfLog.Enable(Console.Error)` to see the actual response body the sink received (added specifically for this) — a bare, unbranded error page confirms it's an infra-layer block. Full walkthrough, including how to find and except just the offending WAF rule instead of disabling protection entirely: [docs/Configuration.md](docs/Configuration.md#troubleshooting-sink-gets-403-forbidden-but-curl-works).

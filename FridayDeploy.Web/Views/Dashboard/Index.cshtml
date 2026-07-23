@@ -42,7 +42,7 @@
     else
     {
         <a class="log-card" asp-controller="Logs" asp-action="Details" asp-route-id="@Model.LatestLog.Id">
-            <span class="mono">@Model.LatestLog.TimestampUtc.ToString("u")</span>
+            <span class="mono">@Model.LatestLog.TimestampUtc.ToDisplayString()</span>
             <span class="level-pill @LogLevelHelper.CssClass(Model.LatestLog.Level)">@Model.LatestLog.Level</span>
             <strong>@Model.LatestLog.Application</strong>
             <span>@Model.LatestLog.Message</span>
@@ -53,5 +53,5 @@
 <section class="detail-grid">
     <article class="panel"><h2>Latest Error</h2>@if (Model.LatestError is null) { <p class="muted">Nothing exploded today.</p> } else { <a class="log-card compact" asp-controller="Logs" asp-action="Details" asp-route-id="@Model.LatestError.Id"><span class="level-pill @LogLevelHelper.CssClass(Model.LatestError.Level)">@Model.LatestError.Level</span><strong>@Model.LatestError.Application</strong><span>@Model.LatestError.Message</span></a> }</article>
     <article class="panel"><h2>Top Exceptions</h2>@if (Model.TopExceptions.Count == 0) { <p class="muted">Production seems calm.</p> } else { <div class="stack-list">@foreach (var item in Model.TopExceptions) { <a asp-controller="Logs" asp-action="Index" asp-route-Query="Exception~@item.Exception"><span>@item.Application</span><strong>@item.Count</strong><code>@item.Exception</code></a> }</div> }</article>
-    <article class="panel"><h2>Latest Deployment Activity</h2>@if (Model.LatestDeploymentActivity is null) { <p class="muted">No applications have registered yet.</p> } else { <p><strong>@Model.LatestDeploymentActivity.Application</strong> first seen @Model.LatestDeploymentActivity.FirstSeenUtc.ToString("u")</p> }</article>
+    <article class="panel"><h2>Latest Deployment Activity</h2>@if (Model.LatestDeploymentActivity is null) { <p class="muted">No applications have registered yet.</p> } else { <p><strong>@Model.LatestDeploymentActivity.Application</strong> first seen @Model.LatestDeploymentActivity.FirstSeenUtc.ToDisplayString()</p> }</article>
 </section>

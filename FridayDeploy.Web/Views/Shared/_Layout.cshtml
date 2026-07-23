@@ -20,24 +20,28 @@
 <body>
     <a class="skip-link" href="#main-content">Skip to content</a>
     <div class="loading-bar" data-loading-bar></div>
-    <div class="app-shell">
+    <div class="app-shell" id="app-shell">
+        <script>document.getElementById('app-shell').classList.toggle('sidebar-collapsed', localStorage.getItem('fd-sidebar-collapsed') === 'true');</script>
         @if (User.Identity?.IsAuthenticated == true)
         {
             <aside class="sidebar">
-                <a class="brand" asp-controller="Dashboard" asp-action="Index"><span class="brand-mark">FD</span><span>@brandName</span></a>
+                <div class="sidebar-header">
+                    <a class="brand" asp-controller="Dashboard" asp-action="Index"><span class="brand-mark">FD</span><span class="brand-name">@brandName</span></a>
+                    <button type="button" class="sidebar-toggle" data-sidebar-toggle aria-label="Collapse sidebar" title="Collapse sidebar"><i data-lucide="panel-left-close" aria-hidden="true"></i></button>
+                </div>
                 <nav class="side-nav" aria-label="Primary">
-                    <a asp-controller="Dashboard" asp-action="Index" data-icon="layout-dashboard">Dashboard</a>
-                    <a asp-controller="Applications" asp-action="Index" data-icon="boxes">Applications</a>
-                    <a asp-controller="Logs" asp-action="Index" data-icon="terminal-square">Logs</a>
-                    <a asp-controller="Properties" asp-action="Index" data-icon="braces">Properties</a>
-                    <a asp-controller="Exceptions" asp-action="Index" data-icon="bug">Exceptions</a>
-                    <a asp-controller="Bookmarks" asp-action="Index" data-icon="bookmark">Bookmarks</a>
-                    <a asp-controller="ApiKeys" asp-action="Index" data-icon="key-round">API Keys</a>
-                    <a asp-controller="Settings" asp-action="Index" data-icon="settings">Settings</a>
-                    <a asp-controller="About" asp-action="Index" data-icon="info">About</a>
+                    <a asp-controller="Dashboard" asp-action="Index" title="Dashboard"><i data-lucide="layout-dashboard" aria-hidden="true"></i><span class="nav-label">Dashboard</span></a>
+                    <a asp-controller="Applications" asp-action="Index" title="Applications"><i data-lucide="boxes" aria-hidden="true"></i><span class="nav-label">Applications</span></a>
+                    <a asp-controller="Logs" asp-action="Index" title="Logs"><i data-lucide="terminal-square" aria-hidden="true"></i><span class="nav-label">Logs</span></a>
+                    <a asp-controller="Properties" asp-action="Index" title="Properties"><i data-lucide="braces" aria-hidden="true"></i><span class="nav-label">Properties</span></a>
+                    <a asp-controller="Exceptions" asp-action="Index" title="Exceptions"><i data-lucide="bug" aria-hidden="true"></i><span class="nav-label">Exceptions</span></a>
+                    <a asp-controller="Bookmarks" asp-action="Index" title="Bookmarks"><i data-lucide="bookmark" aria-hidden="true"></i><span class="nav-label">Bookmarks</span></a>
+                    <a asp-controller="ApiKeys" asp-action="Index" title="API Keys"><i data-lucide="key-round" aria-hidden="true"></i><span class="nav-label">API Keys</span></a>
+                    <a asp-controller="Settings" asp-action="Index" title="Settings"><i data-lucide="settings" aria-hidden="true"></i><span class="nav-label">Settings</span></a>
+                    <a asp-controller="About" asp-action="Index" title="About"><i data-lucide="info" aria-hidden="true"></i><span class="nav-label">About</span></a>
                 </nav>
                 <form asp-controller="Auth" asp-action="Logout" method="post" class="logout-form">
-                    <button type="submit" data-icon="log-out">Sign out</button>
+                    <button type="submit" title="Sign out"><i data-lucide="log-out" aria-hidden="true"></i><span class="nav-label">Sign out</span></button>
                 </form>
             </aside>
         }

@@ -52,4 +52,14 @@ public sealed class SettingsService(AppDbContext db, IConfiguration configuratio
 
         await db.SaveChangesAsync(cancellationToken);
     }
+
+    /// <summary>Deletes all logs (and their properties, via cascade), bookmarks, notes, and saved searches.
+    /// Users, Applications, and ApiKeys are left untouched so existing integrations keep working.</summary>
+    public async Task TruncateLogDataAsync(CancellationToken cancellationToken)
+    {
+        await db.Logs.ExecuteDeleteAsync(cancellationToken);
+        await db.Bookmarks.ExecuteDeleteAsync(cancellationToken);
+        await db.LogNotes.ExecuteDeleteAsync(cancellationToken);
+        await db.SavedSearches.ExecuteDeleteAsync(cancellationToken);
+    }
 }

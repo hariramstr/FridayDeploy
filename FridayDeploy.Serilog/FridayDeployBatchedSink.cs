@@ -1,5 +1,6 @@
 using System.IO.Compression;
 using System.Net.Http.Headers;
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using Serilog.Debugging;
@@ -12,7 +13,7 @@ namespace FridayDeploy.Serilog;
 /// Ships batches of log events to a FridayDeploy server over HTTP, with gzip compression, exponential-backoff
 /// retries, and local spooling of batches that could not be delivered.
 /// </summary>
-internal sealed class FridayDeployBatchedSink : IBatchedLogEventSink, IDisposable
+public class FridayDeployBatchedSink : IBatchedLogEventSink, IDisposable
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
@@ -30,6 +31,13 @@ internal sealed class FridayDeployBatchedSink : IBatchedLogEventSink, IDisposabl
         _httpClient.BaseAddress ??= new Uri(options.ServerUrl.TrimEnd('/') + "/");
         _httpClient.DefaultRequestHeaders.Remove("X-Api-Key");
         _httpClient.DefaultRequestHeaders.Add("X-Api-Key", options.ApiKey);
+
+        // Some reverse proxies/WAFs reject requests with no User-Agent (HttpClient sends none by default).
+        if (_httpClient.DefaultRequestHeaders.UserAgent.Count == 0)
+        {
+            var sinkVersion = typeof(FridayDeployBatchedSink).Assembly.GetName().Version?.ToString() ?? "1.0.0";
+            _httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("FridayDeploy.Serilog", sinkVersion));
+        }
         _spool = new BatchSpool(options.SpoolDirectory, options.MaxSpoolFiles);
         _applicationName = options.ApplicationName ?? System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name ?? "UnknownApplication";
         _machineName = Environment.MachineName;
@@ -63,7 +71,8 @@ internal sealed class FridayDeployBatchedSink : IBatchedLogEventSink, IDisposabl
                     return;
                 }
 
-                SelfLog.WriteLine("FridayDeploy sink: server returned {0} on attempt {1}", response.StatusCode, attempt);
+                var body = await ReadBodyForDiagnosticsAsync(response).ConfigureAwait(false);
+                SelfLog.WriteLine("FridayDeploy sink: server returned {0} on attempt {1}. Body: {2}", response.StatusCode, attempt, body);
             }
             catch (Exception ex)
             {
@@ -141,6 +150,22 @@ internal sealed class FridayDeployBatchedSink : IBatchedLogEventSink, IDisposabl
                 SelfLog.WriteLine("FridayDeploy sink: failed to resend spooled batch {0}: {1}", path, ex);
                 break;
             }
+        }
+    }
+
+    /// <summary>Best-effort read of a failed response's body, truncated, so reverse-proxy/WAF block pages
+    /// (which usually name themselves) show up in SelfLog instead of just a bare status code.</summary>
+    private static async Task<string> ReadBodyForDiagnosticsAsync(HttpResponseMessage response)
+    {
+        const int maxLength = 500;
+        try
+        {
+            var text = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            return text.Length > maxLength ? text[..maxLength] + "…" : text;
+        }
+        catch (Exception ex)
+        {
+            return $"<failed to read body: {ex.Message}>";
         }
     }
 

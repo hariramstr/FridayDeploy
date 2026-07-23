@@ -10,6 +10,11 @@
     <section class="panel alert-success-soft"><p>Settings saved. Theme and page size apply immediately; some values may need a page refresh.</p></section>
 }
 
+@if (Model.Truncated)
+{
+    <section class="panel alert-success-soft"><p>All log data cleared. API keys, applications, and settings were preserved.</p></section>
+}
+
 <form asp-action="Save" method="post" class="panel stack">
     <label for="retentionDays">Retention Days</label>
     <input id="retentionDays" class="fd-input" type="number" name="RetentionDays" value="@Model.RetentionDays" min="1" max="365" />
@@ -38,3 +43,11 @@
 
     <button class="primary-button" type="submit">Save settings</button>
 </form>
+
+<section class="panel">
+    <h2>Danger Zone</h2>
+    <p class="muted">Permanently deletes all logs, notes, bookmarks, and saved searches. API keys, registered applications, and these settings are kept — you won't need to re-create integrations.</p>
+    <form asp-action="TruncateData" method="post" onsubmit="return confirm('Delete all logs, notes, bookmarks, and saved searches? API keys and applications are kept. This cannot be undone.');">
+        <button class="ghost-button danger" type="submit">Clear all log data</button>
+    </form>
+</section>

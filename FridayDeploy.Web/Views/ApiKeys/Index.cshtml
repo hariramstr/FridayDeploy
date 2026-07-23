@@ -34,8 +34,8 @@
             <tr>
                 <td>@key.ApplicationName</td>
                 <td class="mono">@key.Prefix&hellip;</td>
-                <td>@key.CreatedUtc.ToString("u")</td>
-                <td>@(key.LastUsedUtc?.ToString("u") ?? "never")</td>
+                <td>@key.CreatedUtc.ToDisplayString()</td>
+                <td>@(key.LastUsedUtc.ToDisplayString() ?? "never")</td>
                 <td><span class="status @(key.IsDisabled ? "level-warning" : "level-success")">@(key.IsDisabled ? "Disabled" : "Active")</span></td>
                 <td class="row-actions">
                     <form asp-action="Rotate" asp-route-id="@key.Id" method="post"><button type="submit" title="Rotate key">Rotate</button></form>
