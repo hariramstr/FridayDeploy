@@ -1,0 +1,17 @@
+@model PropertyExplorerViewModel
+@{
+    ViewData["Title"] = "Properties";
+}
+
+<header class="page-header"><div><p class="eyebrow">Structured discovery</p><h1>Properties</h1></div></header>
+<section class="app-grid">
+@foreach (var prop in Model.Properties)
+{
+    <a class="application-card" asp-action="Details" asp-route-name="@prop.Name">
+        <div class="card-row"><h2>@prop.Name</h2><span class="status level-info">@prop.DistinctValues values</span></div>
+        <div class="mini-grid"><span><b>@prop.UsageCount</b> uses</span><span><b>@prop.DistinctValues</b> distinct</span><span><b>@prop.LatestUsageUtc.ToString("MM-dd")</b> latest</span></div>
+        <p class="muted">Click to inspect distinct values and jump straight into filtered logs.</p>
+    </a>
+}
+@if (Model.Properties.Count == 0) { <article class="panel"><p class="muted">No properties yet. Structured logs are waiting to happen.</p></article> }
+</section>

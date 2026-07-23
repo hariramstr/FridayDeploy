@@ -1,0 +1,32 @@
+@model IReadOnlyList<ApplicationCardViewModel>
+@{
+    ViewData["Title"] = "Applications";
+}
+
+<header class="page-header"><div><p class="eyebrow">Auto-discovered</p><h1>Applications</h1></div></header>
+<section class="app-grid">
+@foreach (var app in Model)
+{
+    <a class="application-card" asp-controller="Logs" asp-action="Index" asp-route-application="@app.Application">
+        <div class="card-row">
+            <h2>@app.Application</h2>
+            <span class="status @ApplicationHealthHelper.CssClass(app.HealthStatus)" title="Online/Warning/Offline is based on how recently this application last sent a log">@app.HealthStatus</span>
+        </div>
+        <div class="mini-grid">
+            <span><b>@app.LogsToday</b> today</span>
+            <span><b>@app.LogCount</b> logs</span>
+            <span><b class="level-error">@app.ErrorCount</b> errors</span>
+            <span><b class="level-warning">@app.WarningCount</b> warnings</span>
+            <span><b class="level-info">@app.InformationCount</b> info</span>
+            <span><b>@app.MachineCount</b> machines</span>
+        </div>
+        <p class="muted">Environment @(app.Environment ?? "unknown")</p>
+        <p class="muted">Last error @(app.LastErrorUtc?.ToString("u") ?? "none")</p>
+        <p class="muted">Average @app.AverageLogsPerHour logs/hour</p>
+        <p class="muted">First seen @(app.FirstSeenUtc?.ToString("u") ?? "unregistered")</p>
+        <p class="muted">Last seen @app.LastSeenUtc.ToString("u")</p>
+        <p class="muted">API key @(app.HasActiveApiKey ? "active" : "none")</p>
+        <p class="mono">@(app.Machine ?? "unknown-machine")</p>
+    </a>
+}
+</section>

@@ -1,0 +1,38 @@
+@model IReadOnlyList<Bookmark>
+@{
+    ViewData["Title"] = "Bookmarks";
+}
+
+<header class="page-header"><div><p class="eyebrow">Saved for later</p><h1>Bookmarks</h1></div></header>
+
+<section class="log-list">
+@foreach (var bookmark in Model)
+{
+    <div class="panel">
+        <div class="card-row">
+            @if (bookmark.LogId is not null)
+            {
+                <a asp-controller="Logs" asp-action="Details" asp-route-id="@bookmark.LogId">Log #@bookmark.LogId</a>
+            }
+            else if (bookmark.CorrelationId is not null)
+            {
+                <a asp-controller="Correlation" asp-action="Index" asp-route-id="@bookmark.CorrelationId">Correlation @bookmark.CorrelationId</a>
+            }
+            else if (bookmark.RequestId is not null)
+            {
+                <a asp-controller="Requests" asp-action="Index" asp-route-id="@bookmark.RequestId">Request @bookmark.RequestId</a>
+            }
+            <form asp-action="Delete" method="post"><input type="hidden" name="id" value="@bookmark.Id" /><button type="submit" class="danger" title="Remove bookmark">&times;</button></form>
+        </div>
+        <p class="muted">@bookmark.CreatedUtc.ToString("u")</p>
+        @if (!string.IsNullOrWhiteSpace(bookmark.Note))
+        {
+            <p>@bookmark.Note</p>
+        }
+    </div>
+}
+@if (Model.Count == 0)
+{
+    <article class="panel"><p class="muted">No bookmarks yet. Bookmark a log, correlation, or request to find it here.</p></article>
+}
+</section>

@@ -1,0 +1,20 @@
+@model TimelineViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<header class="page-header"><div><p class="eyebrow">@Model.Field</p><h1>@Model.Value</h1></div><a class="ghost-button" asp-controller="Logs" asp-action="Index" asp-route-Query="@(Model.Field + "=" + Model.Value)">Open logs</a></header>
+<section class="timeline">
+@foreach (var item in Model.Events)
+{
+    <article class="timeline-event">
+        <div class="timeline-dot @LogLevelHelper.CssClass(item.Level)"></div>
+        <div class="panel">
+            <div class="card-row"><span class="mono">@item.TimestampUtc.ToString("u")</span><span class="level-pill @LogLevelHelper.CssClass(item.Level)">@item.Level</span></div>
+            <h2>@item.Message</h2>
+            <p class="muted">@item.Application · @(item.Source ?? "no-source") · gap @(item.GapMs?.ToString("0.##") ?? "0") ms · duration @(item.Duration?.ToString() ?? "-") ms</p>
+            <a asp-controller="Logs" asp-action="Details" asp-route-id="@item.Id">Open event</a>
+        </div>
+    </article>
+}
+</section>

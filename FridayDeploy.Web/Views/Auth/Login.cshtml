@@ -1,0 +1,25 @@
+@model LoginViewModel
+@{
+    ViewData["Title"] = "Login";
+}
+
+<section class="login-card">
+    <div class="login-logo">FD</div>
+    <h1>FridayDeploy</h1>
+    <p class="tagline">Because production has a sense of humor.</p>
+    <form asp-action="Login" method="post" class="stack">
+        <input type="hidden" asp-for="ReturnUrl" />
+        <label asp-for="Username"></label>
+        <input asp-for="Username" class="fd-input" autocomplete="username" />
+        <span asp-validation-for="Username" class="text-danger"></span>
+        <label asp-for="Password"></label>
+        <input asp-for="Password" class="fd-input" autocomplete="current-password" />
+        <span asp-validation-for="Password" class="text-danger"></span>
+        @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+        {
+            <div class="alert-danger-soft">@Model.ErrorMessage</div>
+        }
+        <button class="primary-button" type="submit">Enter console</button>
+    </form>
+    <p class="easter-egg">Remember:<br />Never deploy on Friday.</p>
+</section>

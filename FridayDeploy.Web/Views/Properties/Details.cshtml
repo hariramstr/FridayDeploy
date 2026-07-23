@@ -1,0 +1,18 @@
+@model PropertyDetailsViewModel
+@{
+    ViewData["Title"] = Model.Name;
+}
+
+<header class="page-header"><div><p class="eyebrow">Property values</p><h1>@Model.Name</h1></div></header>
+<section class="panel">
+    <div class="stack-list">
+    @foreach (var value in Model.Values)
+    {
+        <a asp-controller="Logs" asp-action="Index" asp-route-Query="@(Model.Name + "=" + value.Value)">
+            <span class="mono">@(value.Value ?? "null")</span>
+            <strong>@value.UsageCount</strong>
+            <span class="muted">Latest @value.LatestUsageUtc.ToString("u")</span>
+        </a>
+    }
+    </div>
+</section>

@@ -1,0 +1,57 @@
+@model DashboardViewModel
+@inject FridayDeploy.Web.Services.SettingsService SettingsService
+@{
+    ViewData["Title"] = "Dashboard";
+    var refreshMs = (await SettingsService.GetAsync(Context.RequestAborted)).RefreshIntervalSeconds * 1000;
+}
+
+<header class="page-header">
+    <div>
+        <p class="eyebrow">Mission control</p>
+        <h1>Dashboard</h1>
+    </div>
+</header>
+
+<section class="metric-grid">
+    <article class="metric-card"><span>Today's Logs</span><strong>@Model.TodaysLogs</strong></article>
+    <article class="metric-card"><span>Errors Today</span><strong class="level-error">@Model.Errors</strong></article>
+    <article class="metric-card"><span>Warnings Today</span><strong class="level-warning">@Model.Warnings</strong></article>
+    <article class="metric-card"><span>Avg Logs/Minute</span><strong class="level-info">@Model.AverageLogsPerMinute</strong></article>
+</section>
+
+<section class="metric-grid">
+    <article class="metric-card"><span>Total Applications</span><strong>@Model.Applications</strong></article>
+    <article class="metric-card"><span>Online</span><strong class="level-success">@Model.OnlineApplications</strong></article>
+    <article class="metric-card"><span>Warning</span><strong class="level-warning">@Model.WarningApplications</strong></article>
+    <article class="metric-card"><span>Offline</span><strong class="level-muted">@Model.OfflineApplications</strong></article>
+</section>
+
+<section class="chart-grid" data-refresh="@refreshMs">
+    <article class="panel"><h2>Logs Per Hour</h2><canvas data-chart='@Json.Serialize(Model.LogsPerHour)'></canvas></article>
+    <article class="panel"><h2>Errors Per Hour</h2><canvas data-chart='@Json.Serialize(Model.ErrorsPerHour)'></canvas></article>
+    <article class="panel"><h2>Logs Per Application</h2><canvas data-chart='@Json.Serialize(Model.TopApplications)'></canvas></article>
+    <article class="panel"><h2>Last 7 Days</h2><canvas data-chart='@Json.Serialize(Model.LastSevenDays)'></canvas></article>
+</section>
+
+<section class="panel">
+    <h2>Latest Log</h2>
+    @if (Model.LatestLog is null)
+    {
+        <p class="muted">No logs have been ingested yet.</p>
+    }
+    else
+    {
+        <a class="log-card" asp-controller="Logs" asp-action="Details" asp-route-id="@Model.LatestLog.Id">
+            <span class="mono">@Model.LatestLog.TimestampUtc.ToString("u")</span>
+            <span class="level-pill @LogLevelHelper.CssClass(Model.LatestLog.Level)">@Model.LatestLog.Level</span>
+            <strong>@Model.LatestLog.Application</strong>
+            <span>@Model.LatestLog.Message</span>
+        </a>
+    }
+</section>
+
+<section class="detail-grid">
+    <article class="panel"><h2>Latest Error</h2>@if (Model.LatestError is null) { <p class="muted">Nothing exploded today.</p> } else { <a class="log-card compact" asp-controller="Logs" asp-action="Details" asp-route-id="@Model.LatestError.Id"><span class="level-pill @LogLevelHelper.CssClass(Model.LatestError.Level)">@Model.LatestError.Level</span><strong>@Model.LatestError.Application</strong><span>@Model.LatestError.Message</span></a> }</article>
+    <article class="panel"><h2>Top Exceptions</h2>@if (Model.TopExceptions.Count == 0) { <p class="muted">Production seems calm.</p> } else { <div class="stack-list">@foreach (var item in Model.TopExceptions) { <a asp-controller="Logs" asp-action="Index" asp-route-Query="Exception~@item.Exception"><span>@item.Application</span><strong>@item.Count</strong><code>@item.Exception</code></a> }</div> }</article>
+    <article class="panel"><h2>Latest Deployment Activity</h2>@if (Model.LatestDeploymentActivity is null) { <p class="muted">No applications have registered yet.</p> } else { <p><strong>@Model.LatestDeploymentActivity.Application</strong> first seen @Model.LatestDeploymentActivity.FirstSeenUtc.ToString("u")</p> }</article>
+</section>

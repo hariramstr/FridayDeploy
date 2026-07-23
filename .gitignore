@@ -1,0 +1,28 @@
+# Build outputs
+bin/
+obj/
+out/
+
+# SQLite runtime data
+FridayDeploy.Web/App_Data/*.db
+FridayDeploy.Web/App_Data/*.db-shm
+FridayDeploy.Web/App_Data/*.db-wal
+
+# User-specific files
+*.user
+*.suo
+.vs/
+.vscode/
+.idea/
+
+# Test results
+TestResults/
+*.trx
+
+# NuGet
+*.nupkg
+nupkg/
+
+# OS files
+.DS_Store
+Thumbs.db

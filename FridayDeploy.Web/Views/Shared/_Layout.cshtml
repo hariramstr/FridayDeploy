@@ -1,0 +1,64 @@
+﻿@inject FridayDeploy.Web.Services.SettingsService SettingsService
+@{
+    var currentSettings = await SettingsService.GetAsync(Context.RequestAborted);
+    var themeAttribute = currentSettings.Theme.ToLowerInvariant();
+    var brandName = string.IsNullOrWhiteSpace(currentSettings.BrandingName) ? "FridayDeploy" : currentSettings.BrandingName;
+}
+<!DOCTYPE html>
+<html lang="en" data-theme="@themeAttribute">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - @brandName</title>
+    <script type="importmap"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <div class="loading-bar" data-loading-bar></div>
+    <div class="app-shell">
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <aside class="sidebar">
+                <a class="brand" asp-controller="Dashboard" asp-action="Index"><span class="brand-mark">FD</span><span>@brandName</span></a>
+                <nav class="side-nav" aria-label="Primary">
+                    <a asp-controller="Dashboard" asp-action="Index" data-icon="layout-dashboard">Dashboard</a>
+                    <a asp-controller="Applications" asp-action="Index" data-icon="boxes">Applications</a>
+                    <a asp-controller="Logs" asp-action="Index" data-icon="terminal-square">Logs</a>
+                    <a asp-controller="Properties" asp-action="Index" data-icon="braces">Properties</a>
+                    <a asp-controller="Exceptions" asp-action="Index" data-icon="bug">Exceptions</a>
+                    <a asp-controller="Bookmarks" asp-action="Index" data-icon="bookmark">Bookmarks</a>
+                    <a asp-controller="ApiKeys" asp-action="Index" data-icon="key-round">API Keys</a>
+                    <a asp-controller="Settings" asp-action="Index" data-icon="settings">Settings</a>
+                    <a asp-controller="About" asp-action="Index" data-icon="info">About</a>
+                </nav>
+                <form asp-controller="Auth" asp-action="Logout" method="post" class="logout-form">
+                    <button type="submit" data-icon="log-out">Sign out</button>
+                </form>
+            </aside>
+        }
+        <main id="main-content" tabindex="-1" role="main" class="content @(User.Identity?.IsAuthenticated == true ? string.Empty : "content-centered")">
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <form class="global-search" asp-controller="Logs" asp-action="Index" method="get" role="search">
+                    <i data-lucide="search" aria-hidden="true"></i>
+                    <input name="Query" value="@Context.Request.Query["Query"]" placeholder="Search logs or type Application=MyApp AND Level=Error" aria-label="Search logs" autocomplete="off" data-global-search />
+                    <button type="submit" title="Search logs">Search</button>
+                    <span class="shortcut">Ctrl K</span>
+                </form>
+            }
+            @RenderBody()
+        </main>
+    </div>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

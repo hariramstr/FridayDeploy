@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="FridayDeploy.SampleApp/FridayDeploy.SampleApp.csproj" />
+  <Project Path="FridayDeploy.Serilog/FridayDeploy.Serilog.csproj" />
+  <Project Path="FridayDeploy.Tests/FridayDeploy.Tests.csproj" />
+  <Project Path="FridayDeploy.Web/FridayDeploy.Web.csproj" />
+</Solution>

@@ -1,0 +1,28 @@
+services:
+  fridaydeploy:
+    build: .
+    container_name: fridaydeploy
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: Data Source=/app/App_Data/fridaydeploy.db
+      AdminUser__Username: admin
+      AdminUser__Password: ${FRIDAYDEPLOY_ADMIN_PASSWORD:-ChangeThisPassword123!}
+      FridayDeploy__RetentionDays: 7
+      FridayDeploy__RefreshIntervalSeconds: 30
+      FridayDeploy__PollingIntervalSeconds: 10
+      FridayDeploy__PageSize: 25
+      FridayDeploy__Theme: Dark
+    volumes:
+      - fridaydeploy-data:/app/App_Data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  fridaydeploy-data:

@@ -1,0 +1,60 @@
+@model ApiKeysViewModel
+@{
+    ViewData["Title"] = "API Keys";
+}
+
+<header class="page-header"><div><p class="eyebrow">Ingestion</p><h1>API Keys</h1></div></header>
+
+@if (Model.JustCreated is not null)
+{
+    <section class="panel alert-success-soft">
+        <p><strong>Key created for @Model.JustCreated.ApplicationName.</strong> Copy it now — it will not be shown again.</p>
+        <code class="mono api-key-reveal">@Model.JustCreated.RawKey</code>
+    </section>
+}
+
+<section class="panel">
+    <h2>Create key</h2>
+    <form asp-action="Create" method="post" class="stack">
+        <label for="applicationName">Application name</label>
+        <input id="applicationName" name="applicationName" class="fd-input" placeholder="e.g. FridayDeploy.SampleApp" autocomplete="off" required />
+        <button class="primary-button" type="submit">Create key</button>
+    </form>
+</section>
+
+<section class="panel">
+    <h2>Existing keys</h2>
+    <table class="data-table">
+        <thead>
+            <tr><th>Application</th><th>Prefix</th><th>Created</th><th>Last used</th><th>Status</th><th></th></tr>
+        </thead>
+        <tbody>
+        @foreach (var key in Model.Keys)
+        {
+            <tr>
+                <td>@key.ApplicationName</td>
+                <td class="mono">@key.Prefix&hellip;</td>
+                <td>@key.CreatedUtc.ToString("u")</td>
+                <td>@(key.LastUsedUtc?.ToString("u") ?? "never")</td>
+                <td><span class="status @(key.IsDisabled ? "level-warning" : "level-success")">@(key.IsDisabled ? "Disabled" : "Active")</span></td>
+                <td class="row-actions">
+                    <form asp-action="Rotate" asp-route-id="@key.Id" method="post"><button type="submit" title="Rotate key">Rotate</button></form>
+                    @if (key.IsDisabled)
+                    {
+                        <form asp-action="Enable" asp-route-id="@key.Id" method="post"><button type="submit">Enable</button></form>
+                    }
+                    else
+                    {
+                        <form asp-action="Disable" asp-route-id="@key.Id" method="post"><button type="submit">Disable</button></form>
+                    }
+                    <form asp-action="Delete" asp-route-id="@key.Id" method="post" onsubmit="return confirm('Delete this key? Applications using it will be rejected immediately.');"><button type="submit" class="danger">Delete</button></form>
+                </td>
+            </tr>
+        }
+        @if (Model.Keys.Count == 0)
+        {
+            <tr><td colspan="6" class="muted">No API keys yet. Create one above to start ingesting logs from an application.</td></tr>
+        }
+        </tbody>
+    </table>
+</section>

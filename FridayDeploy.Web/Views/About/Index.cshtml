@@ -1,0 +1,17 @@
+@model AboutViewModel
+@{
+    ViewData["Title"] = "About";
+}
+
+<header class="page-header"><div><p class="eyebrow">Because production has a sense of humor.</p><h1>FridayDeploy</h1></div></header>
+<section class="panel"><p>FridayDeploy is a lightweight, self-hosted, developer-first structured log server for .NET teams.</p></section>
+
+<section class="panel settings-list">
+    <div><span>Version</span><strong>@Model.Version</strong></div>
+    <div><span>Build</span><strong>@Model.Build</strong></div>
+    <div><span>Database</span><strong class="mono">@Model.DatabasePath</strong></div>
+    <div><span>SQLite Size</span><strong>@((Model.DatabaseSizeBytes / 1024.0 / 1024.0).ToString("F2")) MB</strong></div>
+    <div><span>Retention</span><strong>@Model.RetentionDays days</strong></div>
+    <div><span>License</span><strong>@Model.License</strong></div>
+    <div><span>GitHub</span><strong><a href="@Model.GitHubUrl" target="_blank" rel="noopener">@Model.GitHubUrl</a></strong></div>
+</section>
