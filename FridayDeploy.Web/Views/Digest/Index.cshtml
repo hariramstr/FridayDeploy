@@ -1,0 +1,98 @@
+@model DigestViewModel
+@{
+    ViewData["Title"] = "Weekly Digest";
+}
+
+<header class="page-header"><div><p class="eyebrow">Last 7 days</p><h1>Weekly Digest</h1></div></header>
+
+<section class="detail-grid">
+    <article class="panel">
+        <h2>Top Recurring Bugs</h2>
+        @if (Model.TopExceptions.Count == 0)
+        {
+            <p class="muted">No recurring exceptions this week.</p>
+        }
+        else
+        {
+            <div class="stack-list">
+            @foreach (var item in Model.TopExceptions)
+            {
+                <a class="exception-row" asp-controller="Exceptions" asp-action="Details" asp-route-id="@item.Id">
+                    <span class="status @ExceptionStatusHelper.CssClass(item.Status)">@item.Status</span>
+                    <span>@item.SampleMessage</span>
+                    <strong>@item.OccurrenceCount</strong>
+                    <span class="muted">@item.Application</span>
+                    <span class="mono">@item.LastSeenUtc.ToDisplayString()</span>
+                </a>
+            }
+            </div>
+        }
+    </article>
+    <article class="panel">
+        <h2>Top Failing Sources</h2>
+        @if (Model.TopFailingSources.Count == 0)
+        {
+            <p class="muted">No errors with a source this week.</p>
+        }
+        else
+        {
+            <div class="stack-list">
+            @foreach (var item in Model.TopFailingSources)
+            {
+                <a asp-controller="Logs" asp-action="Index" asp-route-Query="Source=@item.Source"><span>@item.Application</span><strong>@item.Count</strong><code>@item.Source</code></a>
+            }
+            </div>
+        }
+    </article>
+    <article class="panel">
+        <h2>Newly Appeared Bugs</h2>
+        @if (Model.NewExceptionsThisWeek.Count == 0)
+        {
+            <p class="muted">No brand-new exceptions this week.</p>
+        }
+        else
+        {
+            <div class="stack-list">
+            @foreach (var item in Model.NewExceptionsThisWeek)
+            {
+                <a asp-controller="Exceptions" asp-action="Details" asp-route-id="@item.Id"><span>@item.Application</span><strong>@item.OccurrenceCount</strong><code>@item.SampleMessage</code></a>
+            }
+            </div>
+        }
+    </article>
+</section>
+
+<section class="panel">
+    <h2>Per-Application Volume</h2>
+    @if (Model.AppTotals.Count == 0)
+    {
+        <p class="muted">No logs this week.</p>
+    }
+    else
+    {
+        <div class="breakdown-list">
+        @foreach (var item in Model.AppTotals)
+        {
+            <div class="breakdown-row"><span><a asp-controller="Logs" asp-action="Index" asp-route-Query="Application=@item.Application">@item.Application</a></span><span>@item.LogCount logs, <span class="level-error">@item.ErrorCount errors</span></span></div>
+        }
+        </div>
+    }
+</section>
+
+<section class="panel">
+    <h2>Volume Forecast (next day)</h2>
+    <p class="muted">Simple linear trend over the last 14 days of daily volume.</p>
+    @if (Model.Forecasts.Count == 0)
+    {
+        <p class="muted">Not enough history yet to forecast.</p>
+    }
+    else
+    {
+        <div class="breakdown-list">
+        @foreach (var item in Model.Forecasts)
+        {
+            <div class="breakdown-row"><span>@item.Application</span><span>~@item.PredictedNextDayCount.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture) predicted (avg @item.DailyAverage.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)/day, trend @(item.TrendSlopePerDay >= 0 ? "+" : "")@item.TrendSlopePerDay.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)/day)</span></div>
+        }
+        </div>
+    }
+</section>

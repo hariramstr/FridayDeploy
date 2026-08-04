@@ -94,18 +94,35 @@
                 </div>
             </div>
         }
+        <div class="field field-wide">
+            <label>Quick filters</label>
+            <div class="chip-row">
+                <a class="chip" asp-action="Index" asp-route-Level="Error" asp-route-LastMinutes="15">Errors, last 15 min</a>
+                <a class="chip" asp-action="Index" asp-route-MinDuration="@Model.SlowRequestThresholdMs">Slow requests</a>
+                <a class="chip" asp-action="Index" asp-route-OnlyBookmarked="true">Bookmarked only</a>
+            </div>
+        </div>
     </div>
 </section>
 
 <section class="log-list" data-live="@(Model.Live ? "true" : "false")" data-poll-interval="@pollMs">
-@foreach (var log in Model.Logs)
+@foreach (var group in Model.Logs)
 {
+    var log = group.Log;
     <details class="log-card-rich">
         <summary>
         <span class="mono">@log.TimestampUtc.ToDisplayString()</span>
         <span class="level-pill @LogLevelHelper.CssClass(log.Level)">@log.Level</span>
         <strong>@log.Application</strong>
         <span>@log.Message</span>
+        @if (log.IsSlow)
+        {
+            <span class="status level-warning" title="Duration @(log.Duration?.ToString() ?? "-") ms, at or above the @Model.SlowRequestThresholdMs ms threshold">Slow</span>
+        }
+        @if (group.RepeatCount > 1)
+        {
+            <span class="chip" title="@group.RepeatCount consecutive matching events">&times;@group.RepeatCount</span>
+        }
         </summary>
         <div class="log-expanded">
             <span>Environment @(log.Environment ?? "-")</span>

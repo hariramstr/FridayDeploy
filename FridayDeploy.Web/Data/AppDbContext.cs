@@ -14,6 +14,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<Bookmark> Bookmarks => Set<Bookmark>();
     public DbSet<LogNote> LogNotes => Set<LogNote>();
     public DbSet<AppSetting> AppSettings => Set<AppSetting>();
+    public DbSet<ExceptionFingerprint> ExceptionFingerprints => Set<ExceptionFingerprint>();
+    public DbSet<AppHourlyStat> AppHourlyStats => Set<AppHourlyStat>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -29,10 +31,12 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             entity.HasIndex(x => x.TimestampUtc);
             entity.HasIndex(x => x.Application);
             entity.HasIndex(x => x.Level);
+            entity.HasIndex(x => x.ExceptionFingerprintId);
             entity.Property(x => x.Application).HasMaxLength(200);
             entity.Property(x => x.Level).HasMaxLength(32);
             entity.Property(x => x.Message).HasMaxLength(4096);
             entity.HasMany(x => x.Properties).WithOne(x => x.Log).HasForeignKey(x => x.LogId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(x => x.ExceptionFingerprint).WithMany().HasForeignKey(x => x.ExceptionFingerprintId).OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<LogProperty>(entity =>
@@ -80,6 +84,23 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
         {
             entity.Property(x => x.Theme).HasMaxLength(16);
             entity.Property(x => x.BrandingName).HasMaxLength(128);
+            entity.Property(x => x.SlowRequestThresholdMs).HasDefaultValue(1000);
+        });
+
+        modelBuilder.Entity<ExceptionFingerprint>(entity =>
+        {
+            entity.HasIndex(x => x.Fingerprint).IsUnique();
+            entity.HasIndex(x => x.LastSeenUtc);
+            entity.Property(x => x.Fingerprint).HasMaxLength(64);
+            entity.Property(x => x.Application).HasMaxLength(200);
+            entity.Property(x => x.SampleMessage).HasMaxLength(4096);
+        });
+
+        modelBuilder.Entity<AppHourlyStat>(entity =>
+        {
+            entity.HasIndex(x => new { x.Application, x.HourBucketUtc }).IsUnique();
+            entity.HasIndex(x => x.HourBucketUtc);
+            entity.Property(x => x.Application).HasMaxLength(200);
         });
     }
 }

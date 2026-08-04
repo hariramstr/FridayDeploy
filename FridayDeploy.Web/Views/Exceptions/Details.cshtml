@@ -1,0 +1,85 @@
+@model ExceptionGroupDetailsViewModel
+@{
+    ViewData["Title"] = "Exception Details";
+    var g = Model.Group;
+}
+
+<header class="page-header">
+    <div><p class="eyebrow">@g.Application</p><h1>@g.SampleMessage</h1></div>
+    <div class="header-actions">
+        <span class="status @ExceptionStatusHelper.CssClass(g.Status)">@g.Status</span>
+        <a class="ghost-button" asp-controller="Logs" asp-action="Index" asp-route-ExceptionFingerprintId="@g.Id">View in Logs</a>
+    </div>
+</header>
+
+<section class="metric-grid">
+    <article class="metric-card"><span>Occurrences</span><strong>@g.OccurrenceCount</strong></article>
+    <article class="metric-card"><span>First Seen</span><strong class="mono" style="font-size:1rem">@g.FirstSeenUtc.ToDisplayString()</strong></article>
+    <article class="metric-card"><span>Last Seen</span><strong class="mono" style="font-size:1rem">@g.LastSeenUtc.ToDisplayString()</strong></article>
+    <article class="metric-card"><span>Trend (14 days)</span><canvas class="sparkline" width="200" height="40" data-sparkline='@Json.Serialize(Model.DailyTrend.Select(x => x.Count))'></canvas></article>
+</section>
+
+<section class="detail-grid">
+    <article class="panel">
+        <h2>Affected users</h2>
+        @if (Model.UserBreakdown.Count == 0)
+        {
+            <p class="muted">No UserId property captured on these occurrences.</p>
+        }
+        else
+        {
+            <div class="breakdown-list">
+            @foreach (var item in Model.UserBreakdown)
+            {
+                <div class="breakdown-row"><span class="mono">@item.Value</span><strong>@item.Count</strong></div>
+            }
+            </div>
+        }
+    </article>
+    <article class="panel">
+        <h2>Related exceptions</h2>
+        @if (Model.Related.Count == 0)
+        {
+            <p class="muted">No similar exceptions found.</p>
+        }
+        else
+        {
+            <div class="stack-list">
+            @foreach (var related in Model.Related)
+            {
+                <a asp-action="Details" asp-route-id="@related.Id">
+                    <span class="mono">@related.SampleMessage</span>
+                    <strong>@related.OccurrenceCount&times;</strong>
+                    <span class="status @ExceptionStatusHelper.CssClass(related.Status)">@related.Status</span>
+                </a>
+            }
+            </div>
+        }
+    </article>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(g.SampleStackTrace))
+{
+    <section class="panel copy-section"><button class="copy-button">Copy</button><h2>Sample Stack Trace</h2><pre class="code-block line-numbers">@g.SampleStackTrace</pre></section>
+}
+
+<section class="panel">
+    <h2>Recent occurrences</h2>
+    @if (Model.RecentOccurrences.Count == 0)
+    {
+        <p class="muted">No occurrences recorded.</p>
+    }
+    else
+    {
+        <div class="log-list">
+        @foreach (var log in Model.RecentOccurrences)
+        {
+            <a class="log-card compact" asp-controller="Logs" asp-action="Details" asp-route-id="@log.Id">
+                <span class="level-pill @LogLevelHelper.CssClass(log.Level)">@log.Level</span>
+                <strong>@log.Application</strong>
+                <span>@log.Message</span>
+            </a>
+        }
+        </div>
+    }
+</section>

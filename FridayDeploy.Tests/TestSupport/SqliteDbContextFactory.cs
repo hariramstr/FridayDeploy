@@ -16,6 +16,10 @@ public sealed class SqliteDbContextFactory : IDisposable
         _connection.Open();
         using var db = CreateContext();
         db.Database.EnsureCreated();
+
+        // FTS5 virtual table isn't part of the EF Core model (see AddExceptionFingerprints migration) and
+        // so isn't created by EnsureCreated() — mirror the migration's raw SQL here for test databases.
+        db.Database.ExecuteSqlRaw("CREATE VIRTUAL TABLE IF NOT EXISTS ExceptionSearch USING fts5(Fingerprint UNINDEXED, Content);");
     }
 
     public AppDbContext CreateContext() => new(new DbContextOptionsBuilder<AppDbContext>().UseSqlite(_connection).Options);

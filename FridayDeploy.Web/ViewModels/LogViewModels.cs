@@ -1,7 +1,7 @@
 namespace FridayDeploy.Web.ViewModels;
 
 public sealed record LogsPageViewModel(
-    IReadOnlyList<LogCardViewModel> Logs,
+    IReadOnlyList<LogGroupViewModel> Logs,
     string? Application,
     string? Query,
     int Page,
@@ -13,11 +13,16 @@ public sealed record LogsPageViewModel(
     IReadOnlyList<string> PropertyNames,
     string GeneratedExpression,
     bool Live,
-    IReadOnlyList<SavedSearchViewModel> SavedSearches);
+    IReadOnlyList<SavedSearchViewModel> SavedSearches,
+    int SlowRequestThresholdMs);
 
 public sealed record SavedSearchViewModel(int Id, string Name, string QueryString);
 
-public sealed record LogCardViewModel(long Id, DateTime TimestampUtc, string Level, string Application, string? Environment, string? Machine, string? Source, string Message, string? CorrelationId, string? RequestId, double? Duration);
+public sealed record LogCardViewModel(long Id, DateTime TimestampUtc, string Level, string Application, string? Environment, string? Machine, string? Source, string Message, string? CorrelationId, string? RequestId, double? Duration, bool IsSlow = false);
+
+/// <summary>A displayed row on the Logs page: either a single event, or consecutive near-identical
+/// events (same Application/Level/Message/Source) collapsed into one with a repeat count.</summary>
+public sealed record LogGroupViewModel(LogCardViewModel Log, int RepeatCount);
 
 public sealed record LogDetailsViewModel(
     long Id,
@@ -38,7 +43,9 @@ public sealed record LogDetailsViewModel(
     double? Duration,
     string RawJson,
     IReadOnlyList<LogPropertyViewModel> Properties,
-    IReadOnlyList<LogNoteViewModel> Notes);
+    IReadOnlyList<LogNoteViewModel> Notes,
+    LogInvestigationViewModel? Investigation,
+    IReadOnlyList<LogCardViewModel>? IncidentTimeline);
 
 public sealed record LogPropertyViewModel(string Name, string? Value, string Type);
 

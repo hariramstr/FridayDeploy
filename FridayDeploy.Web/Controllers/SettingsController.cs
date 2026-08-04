@@ -26,7 +26,8 @@ public sealed class SettingsController(SettingsService settingsService, IConfigu
             PollingIntervalSeconds = Math.Clamp(model.PollingIntervalSeconds, 5, 3600),
             PageSize = Math.Clamp(model.PageSize, 10, 200),
             Theme = model.Theme is "Light" or "System" ? model.Theme : "Dark",
-            BrandingName = string.IsNullOrWhiteSpace(model.BrandingName) ? null : model.BrandingName.Trim()
+            BrandingName = string.IsNullOrWhiteSpace(model.BrandingName) ? null : model.BrandingName.Trim(),
+            SlowRequestThresholdMs = Math.Clamp(model.SlowRequestThresholdMs, 100, 60000)
         };
         await settingsService.SaveAsync(setting, cancellationToken);
         return RedirectToAction(nameof(Index), new { saved = true });
@@ -47,6 +48,7 @@ public sealed class SettingsController(SettingsService settingsService, IConfigu
         setting.PageSize,
         setting.Theme,
         setting.BrandingName,
+        setting.SlowRequestThresholdMs,
         configuration["AdminUser:Username"] ?? "admin",
         saved,
         truncated);

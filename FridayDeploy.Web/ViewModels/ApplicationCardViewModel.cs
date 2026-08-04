@@ -16,4 +16,8 @@ public sealed record ApplicationCardViewModel(
     string Status,
     DateTime? FirstSeenUtc,
     bool HasActiveApiKey,
-    string HealthStatus);
+    string HealthStatus,
+    IReadOnlyList<AppHourlyPointViewModel> HourlyHistory);
+
+/// <summary>One hour-bucket for the F-21 uptime strip / F-26 sparkline on the Applications page.</summary>
+public sealed record AppHourlyPointViewModel(DateTime HourBucketUtc, int LogCount, int ErrorCount);

@@ -10,4 +10,5 @@ public sealed class AppSetting
     public int PageSize { get; set; }
     public required string Theme { get; set; }
     public string? BrandingName { get; set; }
+    public int SlowRequestThresholdMs { get; set; }
 }

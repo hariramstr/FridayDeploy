@@ -20,6 +20,14 @@
             <span><b class="level-info">@app.InformationCount</b> info</span>
             <span><b>@app.MachineCount</b> machines</span>
         </div>
+        <div class="uptime-strip" title="Last 24 hours: green = healthy, red = had errors, gray = no data">
+        @foreach (var hour in app.HourlyHistory)
+        {
+            var cellClass = hour.ErrorCount > 0 ? "level-error" : hour.LogCount > 0 ? "level-success" : "level-muted";
+            <span class="uptime-cell @cellClass" title="@hour.HourBucketUtc.ToDisplayString(): @hour.LogCount logs, @hour.ErrorCount errors"></span>
+        }
+        </div>
+        <canvas class="sparkline" width="200" height="32" data-sparkline='@Json.Serialize(app.HourlyHistory.Select(x => x.LogCount))'></canvas>
         <p class="muted">Environment @(app.Environment ?? "unknown")</p>
         <p class="muted">Last error @(app.LastErrorUtc.ToDisplayString() ?? "none")</p>
         <p class="muted">Average @app.AverageLogsPerHour logs/hour</p>

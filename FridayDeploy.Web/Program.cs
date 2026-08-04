@@ -23,6 +23,8 @@ builder.Services.AddScoped<LogService>();
 builder.Services.AddScoped<LogSearchService>();
 builder.Services.AddScoped<DashboardService>();
 builder.Services.AddScoped<ExplorerService>();
+builder.Services.AddScoped<LogInvestigationService>();
+builder.Services.AddScoped<DigestService>();
 builder.Services.AddScoped<ApiKeyService>();
 builder.Services.AddScoped<ExportService>();
 builder.Services.AddScoped<SavedSearchService>();
@@ -30,6 +32,7 @@ builder.Services.AddScoped<BookmarkService>();
 builder.Services.AddScoped<NoteService>();
 builder.Services.AddScoped<SettingsService>();
 builder.Services.AddHostedService<LogRetentionService>();
+builder.Services.AddHostedService<AppHourlyRollupService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {

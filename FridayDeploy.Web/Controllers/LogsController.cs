@@ -19,23 +19,25 @@ public sealed class LogsController(
     SavedSearchService savedSearchService,
     BookmarkService bookmarkService,
     NoteService noteService,
-    SettingsService settingsService) : Controller
+    SettingsService settingsService,
+    LogInvestigationService logInvestigationService) : Controller
 {
     public async Task<IActionResult> Index(LogSearchRequest request, bool live = false, CancellationToken cancellationToken = default)
     {
-        var pageSize = (await settingsService.GetAsync(cancellationToken)).PageSize;
-        request.PageSize = pageSize;
-        var result = await logSearchService.SearchAsync(request, cancellationToken);
+        var settings = await settingsService.GetAsync(cancellationToken);
+        request.PageSize = settings.PageSize;
+        var result = await logSearchService.SearchAsync(request, cancellationToken, CurrentUserId);
         var filters = await dashboardService.GetFilterOptionsAsync(cancellationToken);
         var propertyNames = await explorerService.GetPropertyNamesAsync(cancellationToken);
         var savedSearches = await savedSearchService.GetAllAsync(CurrentUserId, cancellationToken);
         var generated = BuildExpression(request);
+        var cards = result.Items.Select(x => new LogCardViewModel(x.Id, x.TimestampUtc, x.Level, x.Application, x.Environment, x.Machine, x.Source, x.Message, x.CorrelationId, x.RequestId, x.Duration, x.Duration >= settings.SlowRequestThresholdMs)).ToList();
         var vm = new LogsPageViewModel(
-            result.Items.Select(x => new LogCardViewModel(x.Id, x.TimestampUtc, x.Level, x.Application, x.Environment, x.Machine, x.Source, x.Message, x.CorrelationId, x.RequestId, x.Duration)).ToList(),
+            CollapseDuplicates(cards),
             request.Application,
             request.Query,
             result.Page,
-            Math.Max(1, (int)Math.Ceiling(result.TotalCount / (double)pageSize)),
+            Math.Max(1, (int)Math.Ceiling(result.TotalCount / (double)settings.PageSize)),
             filters.Applications,
             filters.Environments,
             filters.Levels,
@@ -43,7 +45,8 @@ public sealed class LogsController(
             propertyNames,
             generated,
             live,
-            savedSearches.Select(x => new SavedSearchViewModel(x.Id, x.Name, x.QueryString)).ToList());
+            savedSearches.Select(x => new SavedSearchViewModel(x.Id, x.Name, x.QueryString)).ToList(),
+            settings.SlowRequestThresholdMs);
         return View(vm);
     }
 
@@ -112,6 +115,8 @@ public sealed class LogsController(
 
         var raw = JsonSerializer.Serialize(log, new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true });
         var notes = await noteService.GetForLogAsync(id, cancellationToken);
+        var investigation = await logInvestigationService.GetAsync(id, cancellationToken);
+        var incidentTimeline = await logService.GetIncidentTimelineAsync(id, beforeSeconds: 120, afterSeconds: 60, cancellationToken);
         return View(new LogDetailsViewModel(
             log.Id,
             log.TimestampUtc,
@@ -131,8 +136,35 @@ public sealed class LogsController(
             log.Duration,
             raw,
             log.Properties.Select(x => new LogPropertyViewModel(x.PropertyName, x.PropertyValue, x.PropertyType)).ToList(),
-            notes.Select(x => new LogNoteViewModel(x.Id, x.Author, x.Body, x.CreatedUtc)).ToList()));
+            notes.Select(x => new LogNoteViewModel(x.Id, x.Author, x.Body, x.CreatedUtc)).ToList(),
+            investigation,
+            incidentTimeline));
     }
+
+    /// <summary>Collapses consecutive rows on the current page that share Application/Level/Message/Source
+    /// into one row with a repeat count — a retry storm of the same error shouldn't push the actually
+    /// different events off the visible page.</summary>
+    private static List<LogGroupViewModel> CollapseDuplicates(IReadOnlyList<LogCardViewModel> logs)
+    {
+        var groups = new List<LogGroupViewModel>();
+        foreach (var log in logs)
+        {
+            var last = groups.Count > 0 ? groups[^1] : null;
+            if (last is not null && IsSameShape(last.Log, log))
+            {
+                groups[^1] = last with { RepeatCount = last.RepeatCount + 1 };
+            }
+            else
+            {
+                groups.Add(new LogGroupViewModel(log, 1));
+            }
+        }
+
+        return groups;
+    }
+
+    private static bool IsSameShape(LogCardViewModel a, LogCardViewModel b) =>
+        a.Application == b.Application && a.Level == b.Level && a.Message == b.Message && a.Source == b.Source;
 
     private int CurrentUserId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 

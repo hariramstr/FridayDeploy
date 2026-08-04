@@ -1,6 +1,7 @@
 using FridayDeploy.Web.Data;
 using FridayDeploy.Web.DTOs;
 using FridayDeploy.Web.Models;
+using FridayDeploy.Web.ViewModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace FridayDeploy.Web.Services;
@@ -12,7 +13,7 @@ public sealed class LogSearchService(AppDbContext db)
         "Application", "Environment", "Version", "Machine", "Level", "Message", "Exception", "Source", "RequestId", "CorrelationId", "ThreadId", "IPAddress"
     };
 
-    public IQueryable<Log> BuildQuery(LogSearchRequest request)
+    public IQueryable<Log> BuildQuery(LogSearchRequest request, int? currentUserId = null)
     {
         var query = db.Logs.AsNoTracking();
 
@@ -24,13 +25,16 @@ public sealed class LogSearchService(AppDbContext db)
         query = ApplyEquals(query, nameof(Log.RequestId), request.RequestId);
         query = ApplyContains(query, nameof(Log.Source), request.Source);
 
+        if (request.ExceptionFingerprintId is not null) query = query.Where(x => x.ExceptionFingerprintId == request.ExceptionFingerprintId);
         if (request.FromUtc is not null) query = query.Where(x => x.TimestampUtc >= request.FromUtc.Value.ToUniversalTime());
         if (request.ToUtc is not null) query = query.Where(x => x.TimestampUtc <= request.ToUtc.Value.ToUniversalTime());
+        if (request.LastMinutes is > 0) query = query.Where(x => x.TimestampUtc >= DateTime.UtcNow.AddMinutes(-request.LastMinutes.Value));
         if (request.MinDuration is not null) query = query.Where(x => x.Duration >= request.MinDuration);
         if (request.MaxDuration is not null) query = query.Where(x => x.Duration <= request.MaxDuration);
         if (!string.IsNullOrWhiteSpace(request.PropertyName)) query = query.Where(x => x.Properties.Any(p => p.PropertyName == request.PropertyName));
         if (!string.IsNullOrWhiteSpace(request.PropertyValue)) query = query.Where(x => x.Properties.Any(p => p.PropertyValue != null && p.PropertyValue.Contains(request.PropertyValue)));
         if (!string.IsNullOrWhiteSpace(request.ContainsText)) query = ApplyGlobalText(query, request.ContainsText);
+        if (request.OnlyBookmarked && currentUserId is not null) query = query.Where(x => db.Bookmarks.Any(b => b.UserId == currentUserId && b.LogId == x.Id));
 
         foreach (var filter in Parse(request.Query))
         {
@@ -42,16 +46,32 @@ public sealed class LogSearchService(AppDbContext db)
             : query.OrderByDescending(x => x.TimestampUtc);
     }
 
-    public async Task<PagedResponse<LogResponse>> SearchAsync(LogSearchRequest request, CancellationToken cancellationToken)
+    public async Task<PagedResponse<LogResponse>> SearchAsync(LogSearchRequest request, CancellationToken cancellationToken, int? currentUserId = null)
     {
         request.Page = Math.Max(1, request.Page);
         request.PageSize = Math.Clamp(request.PageSize, 1, 100);
-        var query = BuildQuery(request);
+        var query = BuildQuery(request, currentUserId);
         var total = await query.CountAsync(cancellationToken);
         var items = await query.Skip((request.Page - 1) * request.PageSize).Take(request.PageSize)
             .Select(x => new LogResponse(x.Id, x.TimestampUtc, x.Application, x.Environment, x.Machine, x.Level, x.Message, x.Source, x.CorrelationId, x.RequestId, x.Duration))
             .ToListAsync(cancellationToken);
         return new PagedResponse<LogResponse>(items, request.Page, request.PageSize, total);
+    }
+
+    /// <summary>"Is it one customer or everyone?" — ranks distinct values of a property across a filtered
+    /// result set, e.g. how many distinct UserIds or Districts are represented among a set of failures.</summary>
+    public async Task<IReadOnlyList<PropertyBreakdownItemViewModel>> GetPropertyBreakdownAsync(LogSearchRequest request, string propertyName, CancellationToken cancellationToken)
+    {
+        var logIds = BuildQuery(request).Select(x => x.Id);
+        var raw = await db.LogProperties.AsNoTracking()
+            .Where(p => p.PropertyName == propertyName && logIds.Contains(p.LogId))
+            .GroupBy(p => p.PropertyValue)
+            .Select(g => new { Value = g.Key, Count = g.Count() })
+            .OrderByDescending(x => x.Count)
+            .Take(20)
+            .ToListAsync(cancellationToken);
+
+        return raw.Select(x => new PropertyBreakdownItemViewModel(x.Value ?? "(none)", x.Count)).ToList();
     }
 
     public static IReadOnlyList<SearchFilter> Parse(string? expression)

@@ -1,0 +1,25 @@
+@model IReadOnlyList<JobViewModel>
+@{
+    ViewData["Title"] = "Background Jobs";
+}
+
+<header class="page-header"><div><p class="eyebrow">Discovered by convention</p><h1>Background Jobs</h1></div></header>
+
+@if (Model.Count == 0)
+{
+    <article class="panel"><p class="muted">No jobs found. Log a "JobName" property from a scheduled or background task to have it show up here.</p></article>
+}
+else
+{
+    <section class="stack-list">
+    @foreach (var job in Model)
+    {
+        var status = job.LastRunLevel is "Error" or "Fatal" or "Critical" ? "Failed" : "Succeeded";
+        <a asp-controller="Logs" asp-action="Index" asp-route-Query="JobName=@job.JobName">
+            <span><span class="status @(status == "Failed" ? "level-error" : "level-success")">@status</span> <strong>@job.JobName</strong> · @job.LastRunMessage</span>
+            <span>@job.RunCount run(s), <span class="level-error">@job.FailureCount failure(s)</span></span>
+            <span class="mono">@job.LastRunUtc.ToDisplayString()</span>
+        </a>
+    }
+    </section>
+}

@@ -26,6 +26,20 @@
     <article class="metric-card"><span>Offline</span><strong class="level-muted">@Model.OfflineApplications</strong></article>
 </section>
 
+@if (Model.Anomalies.Count > 0)
+{
+    <section class="panel">
+        <h2>Volume anomalies</h2>
+        <p class="muted">This hour's traffic vs. this application's usual traffic at this hour (7-day average).</p>
+        <div class="breakdown-list">
+        @foreach (var anomaly in Model.Anomalies)
+        {
+            <div class="breakdown-row"><span><a asp-controller="Logs" asp-action="Index" asp-route-Query="Application=@anomaly.Application">@anomaly.Application</a></span><span><span class="status level-warning">Spike</span> @anomaly.CurrentHourCount this hour vs. usual @anomaly.BaselineHourCount.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)</span></div>
+        }
+        </div>
+    </section>
+}
+
 <section class="chart-grid" data-refresh="@refreshMs">
     <article class="panel"><h2>Logs Per Hour</h2><canvas data-chart='@Json.Serialize(Model.LogsPerHour)'></canvas></article>
     <article class="panel"><h2>Errors Per Hour</h2><canvas data-chart='@Json.Serialize(Model.ErrorsPerHour)'></canvas></article>
@@ -54,4 +68,5 @@
     <article class="panel"><h2>Latest Error</h2>@if (Model.LatestError is null) { <p class="muted">Nothing exploded today.</p> } else { <a class="log-card compact" asp-controller="Logs" asp-action="Details" asp-route-id="@Model.LatestError.Id"><span class="level-pill @LogLevelHelper.CssClass(Model.LatestError.Level)">@Model.LatestError.Level</span><strong>@Model.LatestError.Application</strong><span>@Model.LatestError.Message</span></a> }</article>
     <article class="panel"><h2>Top Exceptions</h2>@if (Model.TopExceptions.Count == 0) { <p class="muted">Production seems calm.</p> } else { <div class="stack-list">@foreach (var item in Model.TopExceptions) { <a asp-controller="Logs" asp-action="Index" asp-route-Query="Exception~@item.Exception"><span>@item.Application</span><strong>@item.Count</strong><code>@item.Exception</code></a> }</div> }</article>
     <article class="panel"><h2>Latest Deployment Activity</h2>@if (Model.LatestDeploymentActivity is null) { <p class="muted">No applications have registered yet.</p> } else { <p><strong>@Model.LatestDeploymentActivity.Application</strong> first seen @Model.LatestDeploymentActivity.FirstSeenUtc.ToDisplayString()</p> }</article>
+    <article class="panel"><h2>Top Failing Sources</h2>@if (Model.TopFailingSources.Count == 0) { <p class="muted">No errors with a source today.</p> } else { <div class="stack-list">@foreach (var item in Model.TopFailingSources) { <a asp-controller="Logs" asp-action="Index" asp-route-Query="Source=@item.Source"><span>@item.Application</span><strong>@item.Count</strong><code>@item.Source</code></a> }</div> }</article>
 </section>

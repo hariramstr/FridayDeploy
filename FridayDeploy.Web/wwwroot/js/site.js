@@ -32,6 +32,19 @@ document.addEventListener("keydown", event => {
     }
 });
 
+const globalSearchForm = document.querySelector(".global-search");
+if (globalSearchForm) {
+    const guidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    globalSearchForm.addEventListener("submit", event => {
+        const value = globalSearchForm.querySelector("[data-global-search]")?.value.trim() ?? "";
+        const correlationUrl = globalSearchForm.getAttribute("data-correlation-url");
+        if (guidPattern.test(value) && correlationUrl) {
+            event.preventDefault();
+            window.location.href = `${correlationUrl}?id=${encodeURIComponent(value)}`;
+        }
+    });
+}
+
 document.querySelectorAll(".copy-button").forEach(button => {
     button.addEventListener("click", async () => {
         const section = button.closest(".copy-section");
@@ -63,6 +76,39 @@ document.querySelectorAll("canvas[data-chart]").forEach(canvas => {
         data: { labels: rows.map(x => x.label), datasets: [{ data: rows.map(x => x.count), backgroundColor: themeColor("--info"), borderColor: border }] },
         options: { plugins: { legend: { display: false } }, scales: { x: { ticks: { color: muted }, grid: { color: border } }, y: { ticks: { color: muted }, grid: { color: border } } } }
     });
+});
+
+// Lightweight sparkline — deliberately not a Chart.js instance, since a page can show dozens of these
+// (one per exception/application) and a full chart object per row would be needlessly heavy.
+document.querySelectorAll("canvas[data-sparkline]").forEach(canvas => {
+    const values = JSON.parse(canvas.dataset.sparkline || "[]");
+    const ctx = canvas.getContext("2d");
+    const w = canvas.width, h = canvas.height, pad = 3;
+    if (values.length < 2) return;
+
+    const max = Math.max(1, ...values);
+    const stepX = (w - pad * 2) / (values.length - 1);
+    const points = values.map((v, i) => [pad + i * stepX, h - pad - (v / max) * (h - pad * 2)]);
+
+    ctx.beginPath();
+    ctx.moveTo(points[0][0], h);
+    points.forEach(p => ctx.lineTo(p[0], p[1]));
+    ctx.lineTo(points[points.length - 1][0], h);
+    ctx.closePath();
+    ctx.fillStyle = themeColor("--info") + "22";
+    ctx.fill();
+
+    ctx.beginPath();
+    points.forEach((p, i) => i === 0 ? ctx.moveTo(p[0], p[1]) : ctx.lineTo(p[0], p[1]));
+    ctx.strokeStyle = themeColor("--info");
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    const last = points[points.length - 1];
+    ctx.beginPath();
+    ctx.arc(last[0], last[1], 2.5, 0, Math.PI * 2);
+    ctx.fillStyle = themeColor("--info");
+    ctx.fill();
 });
 
 const builder = document.querySelector("#query-builder");

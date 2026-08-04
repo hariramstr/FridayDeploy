@@ -1,0 +1,34 @@
+@model HeatmapViewModel
+@{
+    ViewData["Title"] = "Endpoint Heatmap";
+    var maxCount = Model.Rows.Count == 0 ? 0 : Model.Rows.SelectMany(x => x.HourlyErrorCounts).DefaultIfEmpty(0).Max();
+}
+
+<header class="page-header"><div><p class="eyebrow">Last 7 days</p><h1>Endpoint Heatmap</h1></div></header>
+
+@if (Model.Rows.Count == 0)
+{
+    <article class="panel"><p class="muted">No errors with a source in the last 7 days.</p></article>
+}
+else
+{
+    <section class="panel heatmap-panel">
+        <div class="heatmap-grid">
+            <div class="heatmap-corner"></div>
+            @for (var hour = 0; hour < 24; hour++)
+            {
+                <div class="heatmap-hour-label">@hour</div>
+            }
+            @foreach (var row in Model.Rows)
+            {
+                <div class="heatmap-row-label mono" title="@row.Source">@row.Source</div>
+                @for (var hour = 0; hour < row.HourlyErrorCounts.Count; hour++)
+                {
+                    var count = row.HourlyErrorCounts[hour];
+                    var intensity = maxCount == 0 ? 0 : (double)count / maxCount;
+                    <div class="heatmap-cell" style="background-color: color-mix(in srgb, var(--error) @((intensity * 90).ToString("0", System.Globalization.CultureInfo.InvariantCulture))%, transparent)" title="@row.Source · @count error(s) at hour @hour">@(count == 0 ? "" : count.ToString())</div>
+                }
+            }
+        </div>
+    </section>
+}

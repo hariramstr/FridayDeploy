@@ -1,0 +1,45 @@
+@model TimelineViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<header class="page-header">
+    <div><p class="eyebrow">@Model.Field</p><h1>@Model.Value</h1></div>
+    <div class="header-actions">
+        <a class="ghost-button" asp-action="Index" asp-route-id="@Model.Value" asp-route-live="@(!Model.Live)"><span class="live-dot @(Model.Live ? "on" : string.Empty)"></span> LIVE</a>
+        <a class="ghost-button" asp-controller="Logs" asp-action="Index" asp-route-Query="@(Model.Field + "=" + Model.Value)">Open logs</a>
+        @if (Model.Field == "CorrelationId")
+        {
+            <form asp-controller="Bookmarks" asp-action="AddCorrelation" method="post"><input type="hidden" name="correlationId" value="@Model.Value" /><button class="ghost-button" type="submit">Bookmark</button></form>
+        }
+        else
+        {
+            <form asp-controller="Bookmarks" asp-action="AddRequest" method="post"><input type="hidden" name="requestId" value="@Model.Value" /><button class="ghost-button" type="submit">Bookmark</button></form>
+        }
+    </div>
+</header>
+<section class="timeline" data-live="@(Model.Live ? "true" : "false")" data-poll-interval="@Model.PollIntervalMs">
+@foreach (var item in Model.Events)
+{
+    <article class="timeline-event">
+        <div class="timeline-dot @LogLevelHelper.CssClass(item.Level)"></div>
+        <div class="panel @(item.IsRootCauseCandidate ? "root-cause" : "")">
+            <div class="card-row">
+                <span class="mono">@item.TimestampUtc.ToDisplayString()</span>
+                <span class="level-pill @LogLevelHelper.CssClass(item.Level)">@item.Level</span>
+                @if (item.IsRootCauseCandidate)
+                {
+                    <span class="status level-error" title="Earliest error-or-worse event in this chain">Root cause</span>
+                }
+            </div>
+            <h2>@item.Message</h2>
+            @if (item.GapMs is > 0)
+            {
+                <div class="gap-bar"><div class="gap-bar-fill" style="width: @(Math.Min(100, item.GapMs.Value / 20).ToString("0"))%"></div></div>
+            }
+            <p class="muted"><strong>@item.Application</strong> · @(item.Source ?? "no-source") · gap @(item.GapMs?.ToString("0.##") ?? "0") ms · duration @(item.Duration?.ToString() ?? "-") ms</p>
+            <a asp-controller="Logs" asp-action="Details" asp-route-id="@item.Id">Open event</a>
+        </div>
+    </article>
+}
+</section>

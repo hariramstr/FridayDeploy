@@ -17,6 +17,9 @@ public sealed class LogSearchRequest
     public DateTime? ToUtc { get; set; }
     public double? MinDuration { get; set; }
     public double? MaxDuration { get; set; }
+    public int? ExceptionFingerprintId { get; set; }
+    public int? LastMinutes { get; set; }
+    public bool OnlyBookmarked { get; set; }
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = 50;
     public string Sort { get; set; } = "timestamp_desc";

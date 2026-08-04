@@ -1,0 +1,61 @@
+@model CompareViewModel
+@{
+    ViewData["Title"] = "Compare Applications";
+}
+
+<header class="page-header"><div><p class="eyebrow">Side by side</p><h1>Compare Applications</h1></div></header>
+
+<section class="panel filter-panel">
+    <form asp-action="Index" method="get" class="filter-grid">
+        <div class="field field-wide">
+            <label>Choose up to 3 applications</label>
+            <div class="chip-row">
+            @foreach (var app in Model.AllApplications)
+            {
+                var checkedAttr = Model.SelectedApplications.Contains(app);
+                <label class="chip"><input type="checkbox" name="apps" value="@app" checked="@checkedAttr" /> @app</label>
+            }
+            </div>
+        </div>
+        <div class="field field-action">
+            <button class="primary-button" type="submit">Compare</button>
+        </div>
+    </form>
+</section>
+
+@if (Model.Cards.Count == 0)
+{
+    <article class="panel"><p class="muted">Select at least one application to compare.</p></article>
+}
+else
+{
+    <section class="compare-grid">
+    @foreach (var app in Model.Cards)
+    {
+        <article class="panel">
+            <div class="card-row">
+                <h2>@app.Application</h2>
+                <span class="status @ApplicationHealthHelper.CssClass(app.HealthStatus)">@app.HealthStatus</span>
+            </div>
+            <div class="mini-grid">
+                <span><b>@app.LogsToday</b> today</span>
+                <span><b>@app.LogCount</b> logs</span>
+                <span><b class="level-error">@app.ErrorCount</b> errors</span>
+                <span><b class="level-warning">@app.WarningCount</b> warnings</span>
+                <span><b class="level-info">@app.InformationCount</b> info</span>
+                <span><b>@app.MachineCount</b> machines</span>
+            </div>
+            <div class="uptime-strip" title="Last 24 hours">
+            @foreach (var hour in app.HourlyHistory)
+            {
+                var cellClass = hour.ErrorCount > 0 ? "level-error" : hour.LogCount > 0 ? "level-success" : "level-muted";
+                <span class="uptime-cell @cellClass" title="@hour.HourBucketUtc.ToDisplayString(): @hour.LogCount logs, @hour.ErrorCount errors"></span>
+            }
+            </div>
+            <p class="muted">Average @app.AverageLogsPerHour logs/hour</p>
+            <p class="muted">Last seen @app.LastSeenUtc.ToDisplayString()</p>
+            <a class="ghost-button" asp-controller="Logs" asp-action="Index" asp-route-Query="Application=@app.Application">Open logs</a>
+        </article>
+    }
+    </section>
+}

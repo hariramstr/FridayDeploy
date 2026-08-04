@@ -38,6 +38,10 @@
     <label for="brandingName">Branding Name</label>
     <input id="brandingName" class="fd-input" name="BrandingName" value="@Model.BrandingName" placeholder="FridayDeploy" />
 
+    <label for="slowRequestThresholdMs">Slow Request Threshold (ms)</label>
+    <input id="slowRequestThresholdMs" class="fd-input" type="number" name="SlowRequestThresholdMs" value="@Model.SlowRequestThresholdMs" min="100" max="60000" />
+    <p class="muted">Log events with a Duration at or above this threshold are flagged as slow throughout the Logs page.</p>
+
     <label for="adminUsername">Admin Username</label>
     <input id="adminUsername" class="fd-input" value="@Model.AdminUsername" disabled />
 

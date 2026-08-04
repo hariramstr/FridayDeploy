@@ -7,6 +7,7 @@ public sealed record SettingsViewModel(
     int PageSize,
     string Theme,
     string? BrandingName,
+    int SlowRequestThresholdMs,
     string AdminUsername,
     bool Saved,
     bool Truncated);

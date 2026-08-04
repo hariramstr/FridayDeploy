@@ -3,6 +3,7 @@ using System;
 using FridayDeploy.Web.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FridayDeploy.Web.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260804142926_AddAppHourlyStats")]
+    partial class AddAppHourlyStats
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0-preview.7.25380.108");
@@ -109,11 +112,6 @@ namespace FridayDeploy.Web.Migrations
 
                     b.Property<int>("RetentionDays")
                         .HasColumnType("INTEGER");
-
-                    b.Property<int>("SlowRequestThresholdMs")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(1000);
 
                     b.Property<string>("Theme")
                         .IsRequired()

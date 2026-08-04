@@ -25,7 +25,8 @@ public sealed class SettingsService(AppDbContext db, IConfiguration configuratio
             PollingIntervalSeconds = configuration.GetValue("FridayDeploy:PollingIntervalSeconds", 10),
             PageSize = configuration.GetValue("FridayDeploy:PageSize", 25),
             Theme = configuration["FridayDeploy:Theme"] is "Light" or "System" ? configuration["FridayDeploy:Theme"]! : "Dark",
-            BrandingName = configuration["FridayDeploy:BrandingName"]
+            BrandingName = configuration["FridayDeploy:BrandingName"],
+            SlowRequestThresholdMs = configuration.GetValue("FridayDeploy:SlowRequestThresholdMs", 1000)
         };
         db.AppSettings.Add(setting);
         await db.SaveChangesAsync(cancellationToken);
@@ -48,6 +49,7 @@ public sealed class SettingsService(AppDbContext db, IConfiguration configuratio
             setting.PageSize = updated.PageSize;
             setting.Theme = updated.Theme;
             setting.BrandingName = updated.BrandingName;
+            setting.SlowRequestThresholdMs = updated.SlowRequestThresholdMs;
         }
 
         await db.SaveChangesAsync(cancellationToken);

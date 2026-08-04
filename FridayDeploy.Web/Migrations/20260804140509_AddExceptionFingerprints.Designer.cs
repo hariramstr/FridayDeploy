@@ -3,6 +3,7 @@ using System;
 using FridayDeploy.Web.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FridayDeploy.Web.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260804140509_AddExceptionFingerprints")]
+    partial class AddExceptionFingerprints
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0-preview.7.25380.108");
@@ -55,39 +58,6 @@ namespace FridayDeploy.Web.Migrations
                     b.ToTable("ApiKeys");
                 });
 
-            modelBuilder.Entity("FridayDeploy.Web.Models.AppHourlyStat", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Application")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("ErrorCount")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("HourBucketUtc")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("LogCount")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("WarningCount")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("HourBucketUtc");
-
-                    b.HasIndex("Application", "HourBucketUtc")
-                        .IsUnique();
-
-                    b.ToTable("AppHourlyStats");
-                });
-
             modelBuilder.Entity("FridayDeploy.Web.Models.AppSetting", b =>
                 {
                     b.Property<int>("Id")
@@ -109,11 +79,6 @@ namespace FridayDeploy.Web.Migrations
 
                     b.Property<int>("RetentionDays")
                         .HasColumnType("INTEGER");
-
-                    b.Property<int>("SlowRequestThresholdMs")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(1000);
 
                     b.Property<string>("Theme")
                         .IsRequired()

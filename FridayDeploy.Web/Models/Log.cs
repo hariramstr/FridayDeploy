@@ -20,4 +20,7 @@ public sealed class Log
     public string? IPAddress { get; set; }
     public string PropertiesJson { get; set; } = "{}";
     public List<LogProperty> Properties { get; set; } = [];
+
+    public int? ExceptionFingerprintId { get; set; }
+    public ExceptionFingerprint? ExceptionFingerprint { get; set; }
 }

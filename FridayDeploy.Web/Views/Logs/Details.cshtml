@@ -10,6 +10,91 @@
         <form asp-controller="Logs" asp-action="Bookmark" method="post"><input type="hidden" name="id" value="@Model.Id" /><button class="ghost-button" type="submit">Bookmark</button></form>
     </div>
 </header>
+@{
+    var investigation = Model.Investigation;
+    var hasInvestigation = investigation is not null && (investigation.ExceptionStatus is not null || investigation.RootCause is not null || investigation.LastSuccess is not null);
+
+    string? FindProperty(params string[] names) => Model.Properties.FirstOrDefault(p => names.Contains(p.Name, StringComparer.OrdinalIgnoreCase))?.Value;
+    var reproMethod = FindProperty("Method", "HttpMethod", "RequestMethod");
+    var reproPath = FindProperty("RequestPath", "Path", "Url", "Endpoint");
+    var reproUserId = FindProperty("UserId", "User");
+    var reproStatusCode = FindProperty("StatusCode", "ResponseStatusCode");
+    var hasRepro = reproMethod is not null || reproPath is not null || reproUserId is not null || reproStatusCode is not null;
+}
+@if (hasRepro)
+{
+    <section class="panel copy-section">
+        <button class="copy-button">Copy</button>
+        <h2>Quick Reproduce</h2>
+        <dl>
+        @if (reproMethod is not null || reproPath is not null)
+        {
+            <dt>Request</dt>
+            <dd class="mono">@(reproMethod ?? "GET") @reproPath</dd>
+        }
+        @if (reproStatusCode is not null)
+        {
+            <dt>Response Status</dt>
+            <dd class="mono">@reproStatusCode</dd>
+        }
+        @if (reproUserId is not null)
+        {
+            <dt>User</dt>
+            <dd><a asp-controller="Logs" asp-action="Index" asp-route-Query="UserId=@reproUserId">@reproUserId</a></dd>
+        }
+        @if (!string.IsNullOrWhiteSpace(Model.CorrelationId))
+        {
+            <dt>Correlation</dt>
+            <dd><a asp-controller="Correlation" asp-action="Index" asp-route-id="@Model.CorrelationId">@Model.CorrelationId</a></dd>
+        }
+        </dl>
+    </section>
+}
+@if (hasInvestigation)
+{
+    <section class="panel investigate-next">
+        <h2>Investigate next</h2>
+        <div class="breakdown-list">
+            @if (investigation!.ExceptionStatus is { } exceptionStatus)
+            {
+                <div class="breakdown-row"><span>Seen before</span><span><a asp-controller="Exceptions" asp-action="Details" asp-route-id="@exceptionStatus.Id">@exceptionStatus.OccurrenceCount occurrence(s)</a>, status <span class="status @ExceptionStatusHelper.CssClass(exceptionStatus.Status)">@exceptionStatus.Status</span>, last seen @exceptionStatus.LastSeenUtc.ToDisplayString()</span></div>
+            }
+            @if (investigation.RootCause is { } rootCause)
+            {
+                <div class="breakdown-row">
+                    <span>Root cause</span>
+                    <span>
+                        @if (investigation.IsRootCause)
+                        {
+                            <span>This is the root cause event.</span>
+                        }
+                        else
+                        {
+                            <a asp-controller="Logs" asp-action="Details" asp-route-id="@rootCause.Id">@rootCause.Message</a> <span class="muted">(@rootCause.TimestampUtc.ToDisplayString())</span>
+                        }
+                    </span>
+                </div>
+            }
+            @if (investigation.LastSuccess is { } lastSuccess)
+            {
+                <div class="breakdown-row"><span>What changed</span><span>Last success <a asp-controller="Logs" asp-action="Details" asp-route-id="@lastSuccess.LogId">@lastSuccess.Message</a> — @lastSuccess.MinutesBeforeFailure.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture) min before this failure</span></div>
+            }
+        </div>
+    </section>
+}
+@if (Model.IncidentTimeline is { Count: > 0 } incidentTimeline)
+{
+    <section class="panel">
+        <h2>Incident timeline</h2>
+        <p class="muted">Events from the same application and machine, 2 min before to 1 min after this one.</p>
+        <div class="stack-list">
+        @foreach (var item in incidentTimeline)
+        {
+            <div class="@(item.Id == Model.Id ? "incident-anchor" : "")"><span class="mono">@item.TimestampUtc.ToDisplayString()</span> <span class="level-pill @LogLevelHelper.CssClass(item.Level)">@item.Level</span> <a asp-controller="Logs" asp-action="Details" asp-route-id="@item.Id">@item.Message</a></div>
+        }
+        </div>
+    </section>
+}
 <section class="detail-grid">
     <article class="panel copy-section"><button class="copy-button">Copy</button><h2>Request</h2><dl><dt>RequestId</dt><dd>@if (Model.RequestId is null) { <span>-</span> } else { <a asp-controller="Requests" asp-action="Index" asp-route-id="@Model.RequestId">@Model.RequestId</a> }</dd><dt>CorrelationId</dt><dd>@if (Model.CorrelationId is null) { <span>-</span> } else { <a asp-controller="Correlation" asp-action="Index" asp-route-id="@Model.CorrelationId">@Model.CorrelationId</a> }</dd><dt>Duration</dt><dd>@(Model.Duration?.ToString() ?? "-") ms</dd><dt>IP</dt><dd>@(Model.IPAddress ?? "-")</dd></dl></article>
     <article class="panel copy-section"><button class="copy-button">Copy</button><h2>Environment</h2><dl><dt>Application</dt><dd><a asp-controller="Logs" asp-action="Index" asp-route-Query="Application=@Model.Application">@Model.Application</a></dd><dt>Environment</dt><dd>@(Model.Environment ?? "-")</dd><dt>Machine</dt><dd>@(Model.Machine ?? "-")</dd><dt>Version</dt><dd>@(Model.Version ?? "-")</dd><dt>Source</dt><dd>@(Model.Source ?? "-")</dd><dt>Thread</dt><dd>@(Model.ThreadId ?? "-")</dd></dl></article>
