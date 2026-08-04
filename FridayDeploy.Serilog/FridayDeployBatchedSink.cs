@@ -179,8 +179,11 @@ public class FridayDeployBatchedSink : IBatchedLogEventSink, IDisposable
     private LogEventPayload ToPayload(LogEvent logEvent)
     {
         var properties = new Dictionary<string, object?>();
-        string? requestId = null, correlationId = null, source = null, userId = null, threadId = null;
+        string? requestId = null, correlationId = null, source = null, userId = null, threadId = null, machineName = null, processId = null;
 
+        // Recognized names are pulled onto dedicated fields rather than left in the generic bag, so an
+        // enricher-provided value (e.g. Serilog.Enrichers.Environment/Process) always wins over the sink's
+        // own best-effort capture of the same information.
         foreach (var (name, value) in logEvent.Properties)
         {
             var plain = ToPlainValue(value);
@@ -191,6 +194,8 @@ public class FridayDeployBatchedSink : IBatchedLogEventSink, IDisposable
                 case "SourceContext": source = plain?.ToString(); break;
                 case "UserId": userId = plain?.ToString(); break;
                 case "ThreadId": threadId = plain?.ToString(); break;
+                case "MachineName": machineName = plain?.ToString(); break;
+                case "ProcessId": processId = plain?.ToString(); break;
                 default:
                     properties[name] = plain;
                     break;
@@ -202,7 +207,7 @@ public class FridayDeployBatchedSink : IBatchedLogEventSink, IDisposable
             properties["UserId"] = userId;
         }
 
-        properties["ProcessId"] = _processId;
+        properties["ProcessId"] = processId ?? _processId;
 
         return new LogEventPayload
         {
@@ -210,7 +215,7 @@ public class FridayDeployBatchedSink : IBatchedLogEventSink, IDisposable
             Application = _applicationName,
             Environment = _options.Environment,
             Version = _options.Version,
-            Machine = _machineName,
+            Machine = machineName ?? _machineName,
             Level = logEvent.Level.ToString(),
             Message = logEvent.RenderMessage(),
             Exception = logEvent.Exception?.Message,

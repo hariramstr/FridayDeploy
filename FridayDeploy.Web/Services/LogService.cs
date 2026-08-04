@@ -89,6 +89,10 @@ public sealed class LogService(AppDbContext db)
 
     public Task<Log?> GetByIdAsync(long id, CancellationToken cancellationToken) => db.Logs.AsNoTracking().Include(x => x.Properties).FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
+    // Keeps indexed LogProperty rows small — full nested data (e.g. Serilog.Exceptions' "ExceptionDetails")
+    // is never lost since it's always preserved verbatim in Log.PropertiesJson.
+    private const int MaxPropertyValueLength = 1000;
+
     private static string GetPropertyType(JsonElement element) => element.ValueKind switch
     {
         JsonValueKind.String => "String",
@@ -103,9 +107,14 @@ public sealed class LogService(AppDbContext db)
     private static string? GetPropertyValue(JsonElement element) => element.ValueKind switch
     {
         JsonValueKind.Null => null,
-        JsonValueKind.String => element.GetString(),
+        JsonValueKind.String => Truncate(element.GetString()),
         JsonValueKind.True => "true",
         JsonValueKind.False => "false",
-        _ => element.GetRawText()
+        JsonValueKind.Object => $"{{…{element.EnumerateObject().Count()} properties…}}",
+        JsonValueKind.Array => $"[…{element.GetArrayLength()} items…]",
+        _ => Truncate(element.GetRawText())
     };
+
+    private static string? Truncate(string? value) =>
+        value is { Length: > MaxPropertyValueLength } ? string.Concat(value.AsSpan(0, MaxPropertyValueLength), "…") : value;
 }
