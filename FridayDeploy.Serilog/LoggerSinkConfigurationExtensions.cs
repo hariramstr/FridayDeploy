@@ -4,9 +4,43 @@ using Serilog.Sinks.PeriodicBatching;
 
 namespace FridayDeploy.Serilog;
 
-/// <summary>Adds the <c>WriteTo.FridayDeploy(...)</c> sink to a Serilog <see cref="LoggerConfiguration"/>.</summary>
+/// <summary>Adds the <c>WriteTo.FridayDeploy(...)</c> and <c>WriteTo.OpenObserve(...)</c> sinks to a Serilog <see cref="LoggerConfiguration"/>.</summary>
 public static class LoggerSinkConfigurationExtensions
 {
+    /// <summary>
+    /// Ships log events to a self-hosted OpenObserve instance via its JSON ingestion API
+    /// (POST /api/{org}/{stream}/_json). Events are queued and flushed asynchronously in batches;
+    /// failures are isolated to Serilog SelfLog and never block the application.
+    /// </summary>
+    public static LoggerConfiguration OpenObserve(
+        this LoggerSinkConfiguration sinkConfiguration,
+        Action<OpenObserveOptions> configure)
+    {
+        ArgumentNullException.ThrowIfNull(sinkConfiguration);
+        ArgumentNullException.ThrowIfNull(configure);
+
+        var options = new OpenObserveOptions { Url = "", Token = "", Stream = "" };
+        configure(options);
+
+        if (string.IsNullOrWhiteSpace(options.Url))
+            throw new ArgumentException("OpenObserveOptions.Url must be set.", nameof(configure));
+        if (string.IsNullOrWhiteSpace(options.Token))
+            throw new ArgumentException("OpenObserveOptions.Token must be set.", nameof(configure));
+        if (string.IsNullOrWhiteSpace(options.Stream))
+            throw new ArgumentException("OpenObserveOptions.Stream must be set.", nameof(configure));
+
+        var batchedSink = new OpenObserveBatchedSink(options);
+        var periodicBatchingSink = new PeriodicBatchingSink(batchedSink, new PeriodicBatchingSinkOptions
+        {
+            BatchSizeLimit = options.BatchSizeLimit,
+            Period = options.FlushInterval,
+            EagerlyEmitFirstEvent = true,
+        });
+
+        return sinkConfiguration.Sink(periodicBatchingSink, options.MinimumLevel);
+    }
+
+
     /// <summary>
     /// Ships log events to a FridayDeploy server. Events are queued in-process, batched by size and time,
     /// gzip-compressed, and sent asynchronously so application threads are never blocked on I/O. Batches that
