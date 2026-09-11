@@ -68,8 +68,8 @@ public sealed class OpenObserveBatchedSink : IBatchedLogEventSink, IDisposable
     {
         var record = new Dictionary<string, object?>
         {
-            // OpenObserve recognises _timestamp as microseconds since Unix epoch for time ordering.
-            ["_timestamp"] = logEvent.Timestamp.UtcDateTime.Ticks / 10, // 100-ns ticks → microseconds
+            // OpenObserve _timestamp: microseconds since Unix epoch.
+            ["_timestamp"] = logEvent.Timestamp.ToUnixTimeMilliseconds() * 1_000L,
             ["timestamp"] = logEvent.Timestamp.UtcDateTime.ToString("O"),
             ["level"] = logEvent.Level.ToString(),
             ["message"] = logEvent.RenderMessage(),
