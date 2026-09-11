@@ -9,8 +9,9 @@ public static class LoggerSinkConfigurationExtensions
 {
     /// <summary>
     /// Ships log events to a self-hosted OpenObserve instance via its JSON ingestion API
-    /// (POST /api/{org}/{stream}/_json). Events are queued and flushed asynchronously in batches;
-    /// failures are isolated to Serilog SelfLog and never block the application.
+    /// (POST /api/{org}/{stream}/_json) using <c>Serilog.Sinks.Http</c> as the transport.
+    /// Events are buffered in memory, batched, and flushed asynchronously; HTTP failures
+    /// are reported to Serilog SelfLog and never block the application.
     /// </summary>
     public static LoggerConfiguration OpenObserve(
         this LoggerSinkConfiguration sinkConfiguration,
@@ -29,15 +30,22 @@ public static class LoggerSinkConfigurationExtensions
         if (string.IsNullOrWhiteSpace(options.Stream))
             throw new ArgumentException("OpenObserveOptions.Stream must be set.", nameof(configure));
 
-        var batchedSink = new OpenObserveBatchedSink(options);
-        var periodicBatchingSink = new PeriodicBatchingSink(batchedSink, new PeriodicBatchingSinkOptions
-        {
-            BatchSizeLimit = options.BatchSizeLimit,
-            Period = options.FlushInterval,
-            EagerlyEmitFirstEvent = true,
-        });
+        var appName = options.ApplicationName
+            ?? System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name
+            ?? "UnknownApplication";
 
-        return sinkConfiguration.Sink(periodicBatchingSink, options.MinimumLevel);
+        var ingestUrl = $"{options.Url.TrimEnd('/')}/api/{options.Organization}/{options.Stream}/_json";
+
+        return sinkConfiguration.Http(
+            requestUri: ingestUrl,
+            queueLimitBytes: null,
+            logEventsInBatchLimit: options.BatchSizeLimit,
+            batchSizeLimitBytes: null,
+            period: options.FlushInterval,
+            textFormatter: new OpenObserveTextFormatter(appName, options.Environment),
+            batchFormatter: new OpenObserveBatchFormatter(),
+            httpClient: new OpenObserveHttpClient(options.Token, options.HttpTimeout),
+            restrictedToMinimumLevel: options.MinimumLevel);
     }
 
 
