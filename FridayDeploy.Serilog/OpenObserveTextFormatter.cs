@@ -50,18 +50,9 @@ internal sealed class OpenObserveTextFormatter : ITextFormatter
                     or "_timestamp" or "timestamp" => $"prop_{name}",
                 _ => name,
             };
-            record[key] = Flatten(value);
+            record[key] = LogEventPropertyFlattener.Flatten(value);
         }
 
         output.Write(JsonSerializer.Serialize(record, JsonOptions));
     }
-
-    private static object? Flatten(LogEventPropertyValue value) => value switch
-    {
-        ScalarValue   s => s.Value,
-        SequenceValue q => q.Elements.Select(Flatten).ToList(),
-        StructureValue t => t.Properties.ToDictionary(p => p.Name, p => Flatten(p.Value)),
-        DictionaryValue d => d.Elements.ToDictionary(kv => kv.Key.ToString(), kv => Flatten(kv.Value)),
-        _ => value.ToString(),
-    };
 }

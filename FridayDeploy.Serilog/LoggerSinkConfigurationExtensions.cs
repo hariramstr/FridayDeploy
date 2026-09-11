@@ -12,6 +12,12 @@ public static class LoggerSinkConfigurationExtensions
     /// (POST /api/{org}/{stream}/_json) using <c>Serilog.Sinks.Http</c> as the transport.
     /// Events are buffered in memory, batched, and flushed asynchronously; HTTP failures
     /// are reported to Serilog SelfLog and never block the application.
+    /// <para>
+    /// <b>Shutdown:</b> call <c>await Log.CloseAndFlushAsync()</c> (or
+    /// <c>Log.CloseAndFlush()</c>) before the process exits to ensure the last
+    /// batch is delivered. Without it, events buffered since the previous flush
+    /// window are silently dropped.
+    /// </para>
     /// </summary>
     public static LoggerConfiguration OpenObserve(
         this LoggerSinkConfiguration sinkConfiguration,

@@ -11,14 +11,16 @@ internal sealed class OpenObserveBatchFormatter : IBatchFormatter
 {
     public void Format(IEnumerable<string> logEvents, TextWriter output)
     {
+        using var enumerator = logEvents.GetEnumerator();
+        if (!enumerator.MoveNext()) return;
+
         output.Write('[');
-        bool first = true;
-        foreach (var logEvent in logEvents)
+        // Each event is already a compact JSON object; just trim any trailing newline.
+        output.Write(enumerator.Current.TrimEnd('\r', '\n'));
+        while (enumerator.MoveNext())
         {
-            if (!first) output.Write(',');
-            // Each event is already a compact JSON object; just trim any trailing newline.
-            output.Write(logEvent.TrimEnd('\r', '\n'));
-            first = false;
+            output.Write(',');
+            output.Write(enumerator.Current.TrimEnd('\r', '\n'));
         }
         output.Write(']');
     }

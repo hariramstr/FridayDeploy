@@ -228,14 +228,8 @@ public class FridayDeployBatchedSink : IBatchedLogEventSink, IDisposable
         };
     }
 
-    private static object? ToPlainValue(LogEventPropertyValue value) => value switch
-    {
-        ScalarValue scalar => scalar.Value,
-        SequenceValue sequence => sequence.Elements.Select(ToPlainValue).ToList(),
-        StructureValue structure => structure.Properties.ToDictionary(p => p.Name, p => ToPlainValue(p.Value)),
-        DictionaryValue dictionary => dictionary.Elements.ToDictionary(kv => kv.Key.ToString(), kv => ToPlainValue(kv.Value)),
-        _ => value.ToString()
-    };
+    private static object? ToPlainValue(LogEventPropertyValue value) =>
+        LogEventPropertyFlattener.Flatten(value);
 
     public void Dispose() => _httpClient.Dispose();
 }
